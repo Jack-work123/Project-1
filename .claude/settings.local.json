@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__f98d3516-4ba2-4bd2-91ad-2ca6e773484c__list_projects",
+      "mcp__0db8536e-4650-42f4-91b3-d9115350b000__list_teams",
+      "mcp__f98d3516-4ba2-4bd2-91ad-2ca6e773484c__list_tables",
+      "mcp__f98d3516-4ba2-4bd2-91ad-2ca6e773484c__execute_sql",
+      "mcp__0db8536e-4650-42f4-91b3-d9115350b000__list_projects",
+      "Bash(gh repo *)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}

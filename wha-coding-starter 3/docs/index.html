@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WHA · Start Building — Day 1 Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0c1f3a;
+    --navy-2:#13294b;
+    --ink:#1a2740;
+    --blue:#2f6df0;
+    --blue-deep:#1b4fd1;
+    --sky:#e8f0ff;
+    --paper:#f6f8fc;
+    --card:#ffffff;
+    --line:#dde5f2;
+    --muted:#5b6b86;
+    --green:#1f9d6b;
+    --amber:#d08a1c;
+    --shadow:0 18px 40px -22px rgba(12,31,58,.45);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;font-family:'Figtree',-apple-system,sans-serif;
+    color:var(--ink);background:var(--paper);line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:0 22px;}
+
+  /* ---------- hero ---------- */
+  header.hero{
+    background:
+      radial-gradient(900px 360px at 80% -10%, rgba(47,109,240,.35), transparent 60%),
+      linear-gradient(160deg,var(--navy) 0%, var(--navy-2) 100%);
+    color:#fff;padding:64px 0 78px;position:relative;overflow:hidden;
+  }
+  header.hero:after{
+    content:"";position:absolute;inset:0;
+    background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px);
+    background-size:22px 22px;mask-image:linear-gradient(180deg,#000,transparent);
+    opacity:.5;
+  }
+  .hero .wrap{position:relative;z-index:2;}
+  .eyebrow{
+    font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;
+    color:#a9c4ff;font-weight:600;margin:0 0 14px;
+  }
+  .hero h1{
+    font-family:'Fraunces',serif;font-weight:600;
+    font-size:clamp(2.3rem,6vw,3.5rem);line-height:1.05;margin:0 0 16px;
+    letter-spacing:-.01em;
+  }
+  .hero h1 em{font-style:italic;color:#9dbcff;}
+  .hero p.lede{font-size:1.18rem;color:#d6e2f7;max-width:620px;margin:0 0 8px;}
+  .hero .for{margin-top:22px;font-size:.95rem;color:#b9cdf0;}
+  .hero .for b{color:#fff;}
+
+  /* ---------- status strip ---------- */
+  .status{
+    margin:-46px auto 0;position:relative;z-index:5;
+    display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+  }
+  .chip{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:16px 14px;box-shadow:var(--shadow);
+  }
+  .chip .mark{font-size:1.15rem;line-height:1;}
+  .chip .t{font-weight:600;font-size:.96rem;margin:8px 0 2px;}
+  .chip .s{font-size:.8rem;color:var(--muted);}
+  .chip.done .mark{color:var(--green);}
+  .chip.todo .mark{color:var(--amber);}
+  @media(max-width:680px){.status{grid-template-columns:repeat(2,1fr);}}
+
+  .reassure{
+    margin:22px auto 0;background:var(--sky);border:1px solid #cfe0ff;
+    border-radius:14px;padding:16px 18px;font-size:.98rem;color:var(--navy-2);
+  }
+  .reassure b{color:var(--blue-deep);}
+
+  /* ---------- sections ---------- */
+  section{padding:30px 0;}
+  .step{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:26px 26px 22px;margin-bottom:20px;box-shadow:0 10px 30px -24px rgba(12,31,58,.5);
+    opacity:0;transform:translateY(14px);animation:rise .6s forwards;
+  }
+  @keyframes rise{to{opacity:1;transform:none;}}
+  .step:nth-child(1){animation-delay:.04s}
+  .step:nth-child(2){animation-delay:.10s}
+  .step:nth-child(3){animation-delay:.16s}
+  .step:nth-child(4){animation-delay:.22s}
+  .step:nth-child(5){animation-delay:.28s}
+  .step-head{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+  .num{
+    flex:0 0 auto;width:40px;height:40px;border-radius:11px;
+    background:linear-gradient(160deg,var(--blue),var(--blue-deep));color:#fff;
+    font-family:'Fraunces',serif;font-weight:600;font-size:1.25rem;
+    display:grid;place-items:center;box-shadow:0 8px 18px -8px rgba(43,94,224,.7);
+  }
+  .step h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.5rem;margin:0;letter-spacing:-.01em;}
+  .step .sub{color:var(--muted);font-size:.95rem;margin:2px 0 16px 54px;}
+  @media(max-width:560px){.step .sub{margin-left:0;}}
+
+  .section-label{
+    font-family:'Figtree';font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--blue-deep);font-weight:700;margin:8px 0 14px;
+  }
+
+  ol.clean{margin:0;padding-left:0;list-style:none;counter-reset:s;}
+  ol.clean li{
+    position:relative;padding:10px 0 10px 34px;border-bottom:1px dashed var(--line);
+  }
+  ol.clean li:last-child{border-bottom:0;}
+  ol.clean li:before{
+    counter-increment:s;content:counter(s);position:absolute;left:0;top:11px;
+    width:22px;height:22px;border-radius:50%;background:var(--sky);color:var(--blue-deep);
+    font-size:.8rem;font-weight:700;display:grid;place-items:center;
+  }
+  kbd{
+    background:var(--navy);color:#fff;border-radius:6px;padding:2px 9px;
+    font-family:'Figtree';font-weight:600;font-size:.85rem;display:inline-block;
+  }
+  .pill{
+    background:var(--sky);color:var(--blue-deep);border-radius:6px;padding:1px 8px;
+    font-weight:600;font-size:.9em;
+  }
+
+  /* check items */
+  .check{display:flex;gap:12px;align-items:flex-start;padding:9px 0;}
+  .check input{
+    appearance:none;flex:0 0 auto;width:21px;height:21px;border:2px solid var(--line);
+    border-radius:6px;margin-top:3px;cursor:pointer;transition:.18s;position:relative;
+  }
+  .check input:checked{background:var(--green);border-color:var(--green);}
+  .check input:checked:after{content:"✓";position:absolute;inset:0;color:#fff;font-size:.82rem;font-weight:700;display:grid;place-items:center;}
+  .check label{cursor:pointer;}
+  .check input:checked + label{color:var(--muted);text-decoration:line-through;text-decoration-color:#bcd;}
+
+  .note{
+    margin-top:16px;border-left:3px solid var(--blue);background:#f3f7ff;
+    border-radius:0 10px 10px 0;padding:12px 16px;font-size:.93rem;color:var(--navy-2);
+  }
+  .note.warn{border-color:var(--amber);background:#fff7ea;}
+  .note b{color:var(--blue-deep);}
+  .note.warn b{color:var(--amber);}
+
+  .agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+  @media(max-width:560px){.agent-grid{grid-template-columns:1fr;}}
+  .agent{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fcfdff;}
+  .agent .n{font-weight:700;color:var(--navy-2);font-size:.95rem;}
+  .agent .n.star{color:var(--blue-deep);}
+  .agent .d{font-size:.85rem;color:var(--muted);margin-top:2px;}
+
+  /* golden rules */
+  .rules{background:linear-gradient(160deg,var(--navy),var(--navy-2));color:#fff;border-radius:18px;padding:28px 26px;}
+  .rules h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.6rem;margin:0 0 4px;}
+  .rules p.s{color:#b9cdf0;margin:0 0 18px;font-size:.95rem;}
+  .rule{display:flex;gap:13px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.1);}
+  .rule:last-child{border-bottom:0;}
+  .rule .ic{flex:0 0 auto;width:26px;height:26px;border-radius:8px;background:rgba(157,188,255,.18);color:#bcd4ff;display:grid;place-items:center;font-size:.9rem;}
+  .rule b{color:#fff;}
+  .rule span{color:#cfdcf3;font-size:.95rem;}
+
+  /* cheat sheet */
+  .cheat{background:var(--card);border:1px dashed var(--blue);border-radius:18px;padding:24px 26px;}
+  .cheat h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.5rem;margin:0 0 4px;}
+  .cheat .s{color:var(--muted);font-size:.93rem;margin:0 0 16px;}
+  .type{display:block;background:var(--navy);color:#eaf1ff;border-radius:10px;padding:12px 16px;margin:8px 0;font-family:'Figtree';font-size:.96rem;}
+  .type b{color:#9dbcff;}
+
+  code{background:#eef3fc;color:var(--blue-deep);border-radius:5px;padding:1px 6px;font-family:ui-monospace,Menlo,monospace;font-size:.84em;}
+  .keys{margin-top:18px;border:1px solid var(--line);border-radius:14px;padding:18px 20px;background:#fbfdff;}
+  .keys-head{font-family:'Fraunces',serif;font-weight:600;font-size:1.18rem;color:var(--navy-2);margin-bottom:4px;}
+  .keys-sub{font-size:.93rem;color:var(--muted);margin:0 0 10px;}
+  footer{padding:36px 0 60px;text-align:center;color:var(--muted);font-size:.85rem;}
+  footer .line{width:46px;height:3px;background:var(--blue);border-radius:2px;margin:0 auto 18px;}
+  a{color:var(--blue-deep);}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">WHA · The Coding Journey</p>
+    <h1>Start building.<br><em>No terminal required.</em></h1>
+    <p class="lede">Everything you need to go from "I've never coded" to shipping your first real change — using the Claude app you already have open.</p>
+    <p class="for">Prepared for <b>Lisa</b> &amp; <b>Darragh</b></p>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="status">
+    <div class="chip done"><div class="mark">●</div><div class="t">Team Claude</div><div class="s">Paid seats sorted</div></div>
+    <div class="chip done"><div class="mark">●</div><div class="t">Claude Desktop</div><div class="s">Installed ✓</div></div>
+    <div class="chip todo"><div class="mark">●</div><div class="t">Supabase</div><div class="s">Setting up</div></div>
+    <div class="chip todo"><div class="mark">●</div><div class="t">Vercel</div><div class="s">Setting up</div></div>
+  </div>
+  <div class="reassure">
+    Here's the good news: <b>the Claude Desktop app already includes Claude Code.</b> There's no extra program to install, no "Node.js", no command line. You'll do everything through the app you've already got.
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section>
+    <div class="step">
+      <div class="step-head"><div class="num">1</div><h2>Open the Code tab</h2></div>
+      <p class="sub">Where the building happens — about 60 seconds.</p>
+      <ol class="clean">
+        <li>Open the <b>Claude Desktop</b> app.</li>
+        <li>Click the <b>Code</b> tab at the top centre of the window.</li>
+        <li>Choose <span class="pill">Local</span> (this means "work with files on my own computer").</li>
+        <li>Click <b>Select folder</b> — you'll pick your project in the next step.</li>
+      </ol>
+      <div class="note">If the <b>Code</b> tab ever asks you to upgrade, it just means that account needs a paid plan — yours is covered by the WHA Team account, so sign in and you're through.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><div class="num">2</div><h2>Load your project &amp; meet your team</h2></div>
+      <p class="sub">A ready-made starter so you don't begin from a blank page.</p>
+      <ol class="clean">
+        <li>Download <b>wha-starter.zip</b> (sent alongside this guide) and double-click to unzip it.</li>
+        <li>Move the <b>wha-starter</b> folder somewhere easy, like <kbd>Documents</kbd>. Rename it to your product's name if you like.</li>
+        <li>Back in Claude → <b>Code</b> → <b>Select folder</b> → choose that folder.</li>
+        <li>In the message box, type <kbd>/agents</kbd> and press enter to see your built-in helper team.</li>
+      </ol>
+      <div class="agent-grid">
+        <div class="agent"><div class="n star">code-mentor ★</div><div class="d">Your teacher. Reviews your work and explains the <i>why</i>. Lean on this constantly.</div></div>
+        <div class="agent"><div class="n">security-reviewer</div><div class="d">Checks nothing unsafe slips through, especially with personal data.</div></div>
+        <div class="agent"><div class="n">supabase-migrator</div><div class="d">Changes the database the safe, reversible way.</div></div>
+        <div class="agent"><div class="n">test-writer</div><div class="d">Writes tests so future changes don't break things.</div></div>
+        <div class="agent"><div class="n">pr-prep</div><div class="d">A pre-flight checklist before you publish a change.</div></div>
+        <div class="agent"><div class="n">domain-expert</div><div class="d">Knows your product. Fill it in once you know what you're building.</div></div>
+      </div>
+      <div class="note">The starter has a hidden folder named <b>.claude</b> that holds these helpers. You won't see it in Finder (hidden folders start with a dot) — that's completely normal. Claude finds it on its own.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><div class="num">3</div><h2>Connect Supabase</h2></div>
+      <p class="sub">This is your database and your sign-in system — where information lives.</p>
+      <div class="check"><input type="checkbox" id="c1"><label for="c1">Create your Supabase account and a new project (the part you're already on).</label></div>
+      <div class="check"><input type="checkbox" id="c2"><label for="c2">In Claude's Code tab, type: <i>"Help me connect this project to my Supabase project."</i></label></div>
+      <div class="check"><input type="checkbox" id="c3"><label for="c3">Claude will ask for your project URL and key — copy them from your Supabase dashboard when prompted.</label></div>
+      <div class="note warn"><b>Safety:</b> those keys go into the project's <kbd>.env.local</kbd> file (Claude handles this for you). Never paste keys into a normal chat window or a random website — only into the project, when Claude asks.</div>
+      <div class="note">House rule for later: changes to the database structure go through <b>migrations</b> (your <i>supabase-migrator</i> does this), never by editing tables directly in the Supabase website. It keeps everything reversible.</div>
+
+      <div class="keys">
+        <div class="keys-head">🔑 Where to find your Supabase keys</div>
+        <p class="keys-sub">Claude needs two things from your Supabase project. Easiest way: click the green <b>Connect</b> button at the top of your Supabase dashboard — it shows both, ready to copy. To find them manually:</p>
+        <ol class="clean">
+          <li><b>Project URL</b> — Settings (the ⚙️ gear, bottom-left) → <b>API Keys</b>. It looks like <code>https://abcd1234.supabase.co</code></li>
+          <li><b>Publishable key</b> — same <b>API Keys</b> tab. It starts with <code>sb_publishable_…</code> &nbsp;(if there isn't one yet, click <b>Create new API keys</b>).</li>
+        </ol>
+        <div class="note warn"><b>Don't</b> use the <b>Secret key</b> (<code>sb_secret_…</code>) when building — it's like a master password. The <b>publishable</b> key is the safe one for your app. If Claude ever needs the secret one, it'll put it somewhere private, never in your code.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><div class="num">4</div><h2>Connect Vercel</h2></div>
+      <p class="sub">This is where your work goes live on the internet — for when you're ready to share.</p>
+      <ol class="clean">
+        <li>Create your Vercel account and link it to your GitHub (Claude can walk you through making the GitHub repo).</li>
+        <li>From then on, Vercel gives you a private <b>preview link</b> for every change, and publishes the real site when you're happy.</li>
+      </ol>
+      <div class="note">No rush on this one. You can build and try things <b>on your own computer</b> first — Vercel matters only when you want others to see it. Ask Claude: <i>"I'm ready to publish — walk me through Vercel."</i></div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><div class="num">5</div><h2>Your first build</h2></div>
+      <p class="sub">Momentum beats perfection. Start tiny, on something you understand.</p>
+      <ol class="clean">
+        <li>Pick something small and familiar — e.g. <i>"a simple page that lists our team and their roles."</i></li>
+        <li>Type it to Claude in plain English. Let it build.</li>
+        <li>Then type: <i>"Use the code-mentor agent to review what you just built and explain it to me."</i></li>
+        <li>Read the explanation. Ask follow-ups until it clicks. <b>That loop is the whole job.</b></li>
+      </ol>
+      <div class="note"><b>The rhythm:</b> ask → let it build → have code-mentor review &amp; explain → understand → save. Repeat. Every loop you understand a little more, and soon you're catching things yourself.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="rules">
+      <h2>Five golden rules</h2>
+      <p class="s">The difference between "using AI" and actually learning to build.</p>
+      <div class="rule"><div class="ic">1</div><span><b>Never keep code you can't explain.</b> If you don't get it, say "explain this like I'm brand new" until you do.</span></div>
+      <div class="rule"><div class="ic">2</div><span><b>One small change at a time.</b> Small steps are easy to understand, easy to undo, hard to break.</span></div>
+      <div class="rule"><div class="ic">3</div><span><b>Let code-mentor review everything.</b> It's there to teach, not to judge. Use it on every change.</span></div>
+      <div class="rule"><div class="ic">4</div><span><b>Save often.</b> Commit your work in small chunks so you can always step back.</span></div>
+      <div class="rule"><div class="ic">5</div><span><b>Stuck for 15 minutes? Ask.</b> Paste the exact error to Claude, or message James. Being stuck is data, not failure.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="cheat">
+      <h2>Copy-paste cheat sheet</h2>
+      <p class="s">The exact phrases to type into the Code tab when you're not sure what to say.</p>
+      <span class="type"><b>To get oriented:</b> What's in this project, and what does it do?</span>
+      <span class="type"><b>To see your team:</b> /agents</span>
+      <span class="type"><b>To learn as you go:</b> Use the code-mentor agent to explain this in plain English.</span>
+      <span class="type"><b>To connect the database:</b> Help me connect this project to my Supabase project.</span>
+      <span class="type"><b>To build something:</b> Build a simple page that … (describe it plainly)</span>
+      <span class="type"><b>Before publishing:</b> Use the pr-prep agent to check this is ready.</span>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="line"></div>
+    WHA · Start Building — Day 1 Guide<br>
+    You already have everything you need. Open the app and type your first sentence.
+  </div>
+</footer>
+
+<script>
+  // Persist checkbox ticks locally (file opened in your own browser).
+  try{
+    document.querySelectorAll('.check input').forEach(function(box){
+      var k='wha-'+box.id;
+      if(localStorage.getItem(k)==='1') box.checked=true;
+      box.addEventListener('change',function(){
+        try{localStorage.setItem(k, box.checked?'1':'0');}catch(e){}
+      });
+    });
+  }catch(e){/* storage blocked — checkboxes still work for the session */}
+</script>
+</body>
+</html>

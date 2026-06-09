@@ -1,0 +1,14 @@
+# Secrets — never commit these
+.env
+.env.*
+!.env.example
+
+# Dependencies / build output
+node_modules/
+dist/
+.next/
+.vercel/
+
+# OS noise
+.DS_Store
+Thumbs.db
