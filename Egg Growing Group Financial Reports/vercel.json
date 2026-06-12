@@ -1,0 +1,29 @@
+{
+  "functions": {
+    "api/auth/dashboard.js": {
+      "includeFiles": "pages/*.html"
+    }
+  },
+  "rewrites": [
+    { "source": "/login",       "destination": "/login.html" },
+    { "source": "/auth/login",  "destination": "/api/auth/login" },
+    { "source": "/auth/bridge", "destination": "/api/auth/bridge" },
+    { "source": "/full-model",  "destination": "/api/auth/dashboard" },
+    { "source": "/ceo-report",  "destination": "/api/auth/dashboard" },
+    { "source": "/cos-report",  "destination": "/api/auth/dashboard" },
+    { "source": "/debtors",     "destination": "/api/auth/dashboard" },
+    { "source": "/timesheets",         "destination": "/api/auth/dashboard" },
+    { "source": "/fortnightly-hours",  "destination": "/api/auth/dashboard" },
+    { "source": "/(.*)\\.html", "destination": "/api/auth/dashboard" },
+    { "source": "/",            "destination": "/api/auth/dashboard" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, private" },
+        { "key": "Pragma",        "value": "no-cache" }
+      ]
+    }
+  ]
+}

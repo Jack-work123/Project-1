@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fortnight Hours Dashboard – 29 May 2026</title>
+<style>
+  @page {
+    size: A3 landscape;
+    margin: 12mm 10mm;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #fff;
+    color: #1a1a2e;
+    font-size: 8.5pt;
+  }
+  h1 {
+    font-size: 15pt;
+    font-weight: 700;
+    margin-bottom: 2px;
+    color: #1a1a2e;
+  }
+  .subtitle { color: #666; margin-bottom: 12px; font-size: 8pt; }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .card {
+    background: #f8f9fb;
+    border-radius: 6px;
+    padding: 8px 10px;
+    border: 1px solid #e0e2e6;
+  }
+  .card .label { font-size: 6.5pt; text-transform: uppercase; letter-spacing: .05em; color: #888; margin-bottom: 3px; }
+  .card .value { font-size: 14pt; font-weight: 700; color: #1a1a2e; }
+  .card .sub { font-size: 7pt; margin-top: 3px; color: #555; }
+  .card .sub .pos { color: #16a34a; font-weight: 600; }
+  .card .sub .neg { color: #dc2626; font-weight: 600; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+  }
+  thead tr.group-row th {
+    font-size: 7pt;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: #777;
+    padding: 5px 5px 3px;
+    text-align: center;
+    border-bottom: 1px solid #e0e2e6;
+    background: #f8f9fb;
+  }
+  thead tr.col-row th {
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #444;
+    padding: 3px 5px 6px;
+    border-bottom: 2px solid #c7d2fe;
+    text-align: right;
+    background: #fff;
+  }
+  thead tr.col-row th.name-col { text-align: left; }
+  thead tr.col-row th.current { color: #1d4ed8; }
+
+  tbody tr:nth-child(even) { background: #f9fafb; }
+  tbody tr:nth-child(odd) { background: #fff; }
+
+  td {
+    padding: 4px 5px;
+    border-bottom: 1px solid #eff0f2;
+    vertical-align: middle;
+  }
+  td.name-col {
+    font-weight: 500;
+    color: #1a1a2e;
+    padding-left: 6px;
+    min-width: 80px;
+    white-space: nowrap;
+  }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.diff { background-color: #fafbff !important; }
+  td.money { color: #166534; }
+  .zero { color: #ccc; }
+  .pos { color: #16a34a; font-weight: 700; }
+  .neg { color: #dc2626; font-weight: 700; }
+
+  th.grp-hours { border-top: 2.5px solid #3b82f6; }
+  th.grp-diff { border-top: 2.5px solid #8b5cf6; }
+  th.grp-cost { border-top: 2.5px solid #059669; }
+  th.grp-cdiff { border-top: 2.5px solid #d97706; }
+
+  tfoot tr td {
+    font-weight: 700;
+    background: #eff3ff !important;
+    border-top: 2px solid #c7d2fe;
+    padding: 5px 5px;
+  }
+  tfoot tr td.name-col { padding-left: 6px; color: #1d4ed8; font-size: 8.5pt; }
+</style>
+</head>
+<body>
+
+<h1>Fortnight Hours Dashboard</h1>
+<p class="subtitle">Period ending 29 May 2026 &nbsp;&middot;&nbsp; Compared to previous two fortnights (15 May &amp; 1 May 2026)</p>
+
+<div class="cards">
+  <div class="card">
+    <div class="label">Total Hours &mdash; 29 May</div>
+    <div class="value">1,803.2</div>
+    <div class="sub">vs prev: <span class="neg">-1.4 hrs</span></div>
+  </div>
+  <div class="card">
+    <div class="label">Total Hours &mdash; 15 May</div>
+    <div class="value">1,804.6</div>
+  </div>
+  <div class="card">
+    <div class="label">Total Hours &mdash; 1 May</div>
+    <div class="value">1,870.5</div>
+  </div>
+  <div class="card">
+    <div class="label">Total Wages &mdash; 29 May</div>
+    <div class="value">$79,516</div>
+    <div class="sub">vs prev: <span class="neg">$1</span></div>
+  </div>
+  <div class="card">
+    <div class="label">Total Wages &mdash; 15 May</div>
+    <div class="value">$79,518</div>
+  </div>
+  <div class="card">
+    <div class="label">Total Wages &mdash; 1 May</div>
+    <div class="value">$82,606</div>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr class="group-row">
+      <th style="text-align:left"></th>
+      <th colspan="3" class="grp-hours">Hours Worked</th>
+      <th colspan="2" class="grp-diff">Hours Change</th>
+      <th colspan="3" class="grp-cost">Gross Wages</th>
+      <th colspan="2" class="grp-cdiff">Wages Change</th>
+    </tr>
+    <tr class="col-row">
+      <th class="name-col">Employee</th>
+      <th class="current">29 May</th>
+      <th>15 May</th>
+      <th>1 May</th>
+      <th>vs Prev</th>
+      <th>vs 2 Prior</th>
+      <th class="current">29 May</th>
+      <th>15 May</th>
+      <th>1 May</th>
+      <th>vs Prev</th>
+      <th>vs 2 Prior</th>
+    </tr>
+  </thead>
+  <tbody>
+    
+        <tr>
+            <td class="name-col">Amber</td>
+            <td class="num">62.7</td>
+            <td class="num">67.7</td>
+            <td class="num">70.3</td>
+            <td class="num diff"><span class="neg">-5.0</span></td>
+            <td class="num diff"><span class="neg">-7.5</span></td>
+            <td class="num money">$2,855</td>
+            <td class="num money">$3,080</td>
+            <td class="num money">$3,197</td>
+            <td class="num money diff"><span class="neg">$225</span></td>
+            <td class="num money diff"><span class="neg">$342</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Andrew</td>
+            <td class="num">82.5</td>
+            <td class="num">85.1</td>
+            <td class="num">67.8</td>
+            <td class="num diff"><span class="neg">-2.6</span></td>
+            <td class="num diff"><span class="pos">+14.7</span></td>
+            <td class="num money">$3,688</td>
+            <td class="num money">$3,803</td>
+            <td class="num money">$3,032</td>
+            <td class="num money diff"><span class="neg">$115</span></td>
+            <td class="num money diff"><span class="pos">+$656</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Carmen</td>
+            <td class="num">80.0</td>
+            <td class="num">80.0</td>
+            <td class="num">80.0</td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money">$5,648</td>
+            <td class="num money">$5,648</td>
+            <td class="num money">$5,648</td>
+            <td class="num money diff"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Cherese</td>
+            <td class="num">95.2</td>
+            <td class="num">81.4</td>
+            <td class="num">84.7</td>
+            <td class="num diff"><span class="pos">+13.8</span></td>
+            <td class="num diff"><span class="pos">+10.5</span></td>
+            <td class="num money">$4,956</td>
+            <td class="num money">$4,318</td>
+            <td class="num money">$4,651</td>
+            <td class="num money diff"><span class="pos">+$638</span></td>
+            <td class="num money diff"><span class="pos">+$305</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Deborah</td>
+            <td class="num">42.9</td>
+            <td class="num">56.6</td>
+            <td class="num">62.5</td>
+            <td class="num diff"><span class="neg">-13.7</span></td>
+            <td class="num diff"><span class="neg">-19.6</span></td>
+            <td class="num money">$1,515</td>
+            <td class="num money">$1,997</td>
+            <td class="num money">$1,910</td>
+            <td class="num money diff"><span class="neg">$482</span></td>
+            <td class="num money diff"><span class="neg">$395</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Emmaline</td>
+            <td class="num">17.2</td>
+            <td class="num">26.7</td>
+            <td class="num">26.8</td>
+            <td class="num diff"><span class="neg">-9.4</span></td>
+            <td class="num diff"><span class="neg">-9.5</span></td>
+            <td class="num money">$900</td>
+            <td class="num money">$1,323</td>
+            <td class="num money">$1,444</td>
+            <td class="num money diff"><span class="neg">$422</span></td>
+            <td class="num money diff"><span class="neg">$544</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Fangliu</td>
+            <td class="num">76.6</td>
+            <td class="num">57.3</td>
+            <td class="num">70.9</td>
+            <td class="num diff"><span class="pos">+19.3</span></td>
+            <td class="num diff"><span class="pos">+5.7</span></td>
+            <td class="num money">$2,324</td>
+            <td class="num money">$1,740</td>
+            <td class="num money">$2,152</td>
+            <td class="num money diff"><span class="pos">+$585</span></td>
+            <td class="num money diff"><span class="pos">+$172</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Haruko</td>
+            <td class="num">85.2</td>
+            <td class="num">73.0</td>
+            <td class="num">76.4</td>
+            <td class="num diff"><span class="pos">+12.2</span></td>
+            <td class="num diff"><span class="pos">+8.8</span></td>
+            <td class="num money">$2,586</td>
+            <td class="num money">$2,216</td>
+            <td class="num money">$2,318</td>
+            <td class="num money diff"><span class="pos">+$370</span></td>
+            <td class="num money diff"><span class="pos">+$269</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Jack Murray</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num">0.3</td>
+            <td class="num">16.0</td>
+            <td class="num diff"><span class="neg">-0.3</span></td>
+            <td class="num diff"><span class="neg">-16.0</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money">$18</td>
+            <td class="num money">$880</td>
+            <td class="num money diff"><span class="neg">$18</span></td>
+            <td class="num money diff"><span class="neg">$880</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Jamir</td>
+            <td class="num">83.4</td>
+            <td class="num">7.8</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num diff"><span class="pos">+75.6</span></td>
+            <td class="num diff"><span class="pos">+83.4</span></td>
+            <td class="num money">$2,531</td>
+            <td class="num money">$236</td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="pos">+$2,294</span></td>
+            <td class="num money diff"><span class="pos">+$2,531</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Jemma</td>
+            <td class="num">5.2</td>
+            <td class="num">4.4</td>
+            <td class="num">5.0</td>
+            <td class="num diff"><span class="pos">+0.8</span></td>
+            <td class="num diff"><span class="pos">+0.2</span></td>
+            <td class="num money">$204</td>
+            <td class="num money">$174</td>
+            <td class="num money">$273</td>
+            <td class="num money diff"><span class="pos">+$30</span></td>
+            <td class="num money diff"><span class="neg">$69</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Jess</td>
+            <td class="num">5.1</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num diff"><span class="pos">+5.1</span></td>
+            <td class="num diff"><span class="pos">+5.1</span></td>
+            <td class="num money">$278</td>
+            <td class="num money">$287</td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="neg">$9</span></td>
+            <td class="num money diff"><span class="pos">+$278</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Jess Murray</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num">5.2</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num diff"><span class="neg">-5.2</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money">$278</td>
+            <td class="num money">$287</td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="neg">$9</span></td>
+            <td class="num money diff"><span class="pos">+$278</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Jinus</td>
+            <td class="num">38.0</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num diff"><span class="pos">+38.0</span></td>
+            <td class="num diff"><span class="pos">+38.0</span></td>
+            <td class="num money">$1,827</td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="pos">+$1,827</span></td>
+            <td class="num money diff"><span class="pos">+$1,827</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Jordan</td>
+            <td class="num">79.0</td>
+            <td class="num">39.8</td>
+            <td class="num">79.0</td>
+            <td class="num diff"><span class="pos">+39.2</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money">$3,594</td>
+            <td class="num money">$1,809</td>
+            <td class="num money">$3,594</td>
+            <td class="num money diff"><span class="pos">+$1,786</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Josh</td>
+            <td class="num">31.6</td>
+            <td class="num">31.6</td>
+            <td class="num">31.6</td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money">$2,750</td>
+            <td class="num money">$2,750</td>
+            <td class="num money">$2,750</td>
+            <td class="num money diff"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Juliano</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num">7.8</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num diff"><span class="neg">-7.8</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Jumpei</td>
+            <td class="num">85.1</td>
+            <td class="num">72.2</td>
+            <td class="num">72.1</td>
+            <td class="num diff"><span class="pos">+13.0</span></td>
+            <td class="num diff"><span class="pos">+13.0</span></td>
+            <td class="num money">$2,584</td>
+            <td class="num money">$2,191</td>
+            <td class="num money">$2,190</td>
+            <td class="num money diff"><span class="pos">+$394</span></td>
+            <td class="num money diff"><span class="pos">+$395</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Kevin</td>
+            <td class="num">77.9</td>
+            <td class="num">85.6</td>
+            <td class="num">87.2</td>
+            <td class="num diff"><span class="neg">-7.7</span></td>
+            <td class="num diff"><span class="neg">-9.3</span></td>
+            <td class="num money">$2,364</td>
+            <td class="num money">$2,599</td>
+            <td class="num money">$2,809</td>
+            <td class="num money diff"><span class="neg">$235</span></td>
+            <td class="num money diff"><span class="neg">$445</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Key Period 16 May 26 to 29 May 2026</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Kylie</td>
+            <td class="num">40.7</td>
+            <td class="num">62.7</td>
+            <td class="num">53.3</td>
+            <td class="num diff"><span class="neg">-22.0</span></td>
+            <td class="num diff"><span class="neg">-12.6</span></td>
+            <td class="num money">$1,678</td>
+            <td class="num money">$2,594</td>
+            <td class="num money">$2,224</td>
+            <td class="num money diff"><span class="neg">$917</span></td>
+            <td class="num money diff"><span class="neg">$546</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Lee</td>
+            <td class="num">9.5</td>
+            <td class="num">9.2</td>
+            <td class="num">15.2</td>
+            <td class="num diff"><span class="pos">+0.3</span></td>
+            <td class="num diff"><span class="neg">-5.7</span></td>
+            <td class="num money">$407</td>
+            <td class="num money">$392</td>
+            <td class="num money">$649</td>
+            <td class="num money diff"><span class="pos">+$14</span></td>
+            <td class="num money diff"><span class="neg">$243</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Lucas</td>
+            <td class="num">70.5</td>
+            <td class="num">71.8</td>
+            <td class="num">4.3</td>
+            <td class="num diff"><span class="neg">-1.3</span></td>
+            <td class="num diff"><span class="pos">+66.2</span></td>
+            <td class="num money">$2,140</td>
+            <td class="num money">$2,179</td>
+            <td class="num money">$130</td>
+            <td class="num money diff"><span class="neg">$39</span></td>
+            <td class="num money diff"><span class="pos">+$2,010</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Manon</td>
+            <td class="num">87.8</td>
+            <td class="num">88.5</td>
+            <td class="num">85.0</td>
+            <td class="num diff"><span class="neg">-0.7</span></td>
+            <td class="num diff"><span class="pos">+2.8</span></td>
+            <td class="num money">$3,124</td>
+            <td class="num money">$3,192</td>
+            <td class="num money">$2,918</td>
+            <td class="num money diff"><span class="neg">$67</span></td>
+            <td class="num money diff"><span class="pos">+$206</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Maurizio</td>
+            <td class="num">9.9</td>
+            <td class="num">88.7</td>
+            <td class="num">90.5</td>
+            <td class="num diff"><span class="neg">-78.8</span></td>
+            <td class="num diff"><span class="neg">-80.6</span></td>
+            <td class="num money">$377</td>
+            <td class="num money">$3,369</td>
+            <td class="num money">$3,169</td>
+            <td class="num money diff"><span class="neg">$2,992</span></td>
+            <td class="num money diff"><span class="neg">$2,792</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Nahir</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Oscar</td>
+            <td class="num">67.0</td>
+            <td class="num">71.0</td>
+            <td class="num">70.7</td>
+            <td class="num diff"><span class="neg">-4.0</span></td>
+            <td class="num diff"><span class="neg">-3.7</span></td>
+            <td class="num money">$2,429</td>
+            <td class="num money">$2,450</td>
+            <td class="num money">$2,473</td>
+            <td class="num money diff"><span class="neg">$21</span></td>
+            <td class="num money diff"><span class="neg">$44</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Peter</td>
+            <td class="num">54.8</td>
+            <td class="num">40.1</td>
+            <td class="num">44.0</td>
+            <td class="num diff"><span class="pos">+14.7</span></td>
+            <td class="num diff"><span class="pos">+10.8</span></td>
+            <td class="num money">$2,702</td>
+            <td class="num money">$2,245</td>
+            <td class="num money">$2,171</td>
+            <td class="num money diff"><span class="pos">+$457</span></td>
+            <td class="num money diff"><span class="pos">+$531</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Pinal</td>
+            <td class="num">76.0</td>
+            <td class="num">76.0</td>
+            <td class="num">76.0</td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money">$3,910</td>
+            <td class="num money">$3,910</td>
+            <td class="num money">$3,910</td>
+            <td class="num money diff"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Rhea</td>
+            <td class="num">9.8</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num diff"><span class="pos">+9.8</span></td>
+            <td class="num diff"><span class="pos">+9.8</span></td>
+            <td class="num money">$296</td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="pos">+$296</span></td>
+            <td class="num money diff"><span class="pos">+$296</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Roger</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Ronald & Sandra</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Ross</td>
+            <td class="num">26.8</td>
+            <td class="num">29.2</td>
+            <td class="num">36.7</td>
+            <td class="num diff"><span class="neg">-2.4</span></td>
+            <td class="num diff"><span class="neg">-9.8</span></td>
+            <td class="num money">$979</td>
+            <td class="num money">$1,068</td>
+            <td class="num money">$1,338</td>
+            <td class="num money diff"><span class="neg">$88</span></td>
+            <td class="num money diff"><span class="neg">$359</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Ruby</td>
+            <td class="num">9.9</td>
+            <td class="num">87.7</td>
+            <td class="num">92.2</td>
+            <td class="num diff"><span class="neg">-77.8</span></td>
+            <td class="num diff"><span class="neg">-82.3</span></td>
+            <td class="num money">$377</td>
+            <td class="num money">$3,391</td>
+            <td class="num money">$3,226</td>
+            <td class="num money diff"><span class="neg">$3,014</span></td>
+            <td class="num money diff"><span class="neg">$2,850</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Ryuji</td>
+            <td class="num">79.8</td>
+            <td class="num">72.4</td>
+            <td class="num">69.8</td>
+            <td class="num diff"><span class="pos">+7.4</span></td>
+            <td class="num diff"><span class="pos">+10.0</span></td>
+            <td class="num money">$2,422</td>
+            <td class="num money">$2,197</td>
+            <td class="num money">$2,118</td>
+            <td class="num money diff"><span class="pos">+$225</span></td>
+            <td class="num money diff"><span class="pos">+$304</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Sandra</td>
+            <td class="num">76.0</td>
+            <td class="num">76.0</td>
+            <td class="num">76.0</td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money">$2,884</td>
+            <td class="num money">$2,884</td>
+            <td class="num money">$2,884</td>
+            <td class="num money diff"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Summer</td>
+            <td class="num">13.3</td>
+            <td class="num">23.4</td>
+            <td class="num">61.4</td>
+            <td class="num diff"><span class="neg">-10.1</span></td>
+            <td class="num diff"><span class="neg">-48.1</span></td>
+            <td class="num money">$636</td>
+            <td class="num money">$964</td>
+            <td class="num money">$2,267</td>
+            <td class="num money diff"><span class="neg">$328</span></td>
+            <td class="num money diff"><span class="neg">$1,631</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">TIME BY EMPLOYEE less BREAK</td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Tamsyn</td>
+            <td class="num">76.0</td>
+            <td class="num">76.0</td>
+            <td class="num">76.0</td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money">$5,776</td>
+            <td class="num money">$5,776</td>
+            <td class="num money">$5,776</td>
+            <td class="num money diff"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Terri</td>
+            <td class="num">53.9</td>
+            <td class="num">58.9</td>
+            <td class="num">57.6</td>
+            <td class="num diff"><span class="neg">-5.0</span></td>
+            <td class="num diff"><span class="neg">-3.6</span></td>
+            <td class="num money">$2,800</td>
+            <td class="num money">$2,673</td>
+            <td class="num money">$2,613</td>
+            <td class="num money diff"><span class="pos">+$127</span></td>
+            <td class="num money diff"><span class="pos">+$187</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Tin</td>
+            <td class="num">60.8</td>
+            <td class="num">60.8</td>
+            <td class="num">60.8</td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num diff"><span class="zero">—</span></td>
+            <td class="num money">$4,308</td>
+            <td class="num money">$4,308</td>
+            <td class="num money">$4,308</td>
+            <td class="num money diff"><span class="zero">—</span></td>
+            <td class="num money diff"><span class="zero">—</span></td>
+        </tr>
+        <tr>
+            <td class="name-col">Wayne</td>
+            <td class="num">33.0</td>
+            <td class="num">29.7</td>
+            <td class="num">70.9</td>
+            <td class="num diff"><span class="pos">+3.4</span></td>
+            <td class="num diff"><span class="neg">-37.9</span></td>
+            <td class="num money">$1,666</td>
+            <td class="num money">$1,498</td>
+            <td class="num money">$3,581</td>
+            <td class="num money diff"><span class="pos">+$168</span></td>
+            <td class="num money diff"><span class="neg">$1,915</span></td>
+        </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td class="name-col">TOTAL</td>
+      <td class="num">1803.2</td>
+      <td class="num">1804.6</td>
+      <td class="num">1870.5</td>
+      <td class="num diff"><span class="neg">-1.4</span></td>
+      <td class="num diff"><span class="neg">-67.3</span></td>
+      <td class="num money">$79,516</td>
+      <td class="num money">$79,518</td>
+      <td class="num money">$82,606</td>
+      <td class="num money diff"><span class="neg">$1</span></td>
+      <td class="num money diff"><span class="neg">$3,090</span></td>
+    </tr>
+  </tfoot>
+</table>
+
+</body>
+</html>

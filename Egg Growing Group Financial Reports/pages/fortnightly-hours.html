@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fortnight Labour Dashboard — 29 May 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-size: 13px;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  /* HEADER */
+  .header { margin-bottom: 24px; }
+  .header h1 { font-size: 22px; font-weight: 700; color: #f8fafc; }
+  .header .sub { color: #94a3b8; font-size: 13px; margin-top: 4px; }
+  .header .period-badge {
+    display: inline-block; margin-top: 8px;
+    background: #1e3a5f; color: #60a5fa;
+    border: 1px solid #2563eb; border-radius: 6px;
+    padding: 3px 12px; font-size: 12px; font-weight: 600;
+  }
+
+  /* KPI CARDS */
+  .kpi-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi {
+    background: #1e293b; border: 1px solid #334155;
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .kpi .label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #64748b; margin-bottom: 6px; }
+  .kpi .value { font-size: 20px; font-weight: 700; color: #f1f5f9; }
+  .kpi .change { font-size: 11px; margin-top: 4px; }
+  .pos { color: #4ade80; }
+  .neg { color: #f87171; }
+  .neu { color: #94a3b8; }
+  .kpi.highlight { border-color: #2563eb; background: #1e3058; }
+  .kpi.highlight .value { color: #60a5fa; }
+
+  /* CHART SECTION */
+  .chart-section {
+    background: #1e293b; border: 1px solid #334155;
+    border-radius: 12px; padding: 20px; margin-bottom: 24px;
+  }
+  .section-title {
+    font-size: 14px; font-weight: 600; color: #f1f5f9;
+    margin-bottom: 4px;
+  }
+  .section-sub { font-size: 11px; color: #64748b; margin-bottom: 16px; }
+  .chart-wrap { position: relative; height: 220px; }
+
+  /* GROUPS GRID */
+  .groups-grid { display: flex; flex-direction: column; gap: 16px; }
+
+  /* GROUP CARD */
+  .group-card {
+    background: #1e293b; border: 1px solid #334155;
+    border-radius: 12px; overflow: hidden;
+  }
+  .group-header {
+    display: flex; align-items: center; gap: 0;
+    background: #162032; border-bottom: 1px solid #334155;
+    padding: 12px 16px; cursor: pointer;
+  }
+  .group-header:hover { background: #1a2a40; }
+  .group-name {
+    font-size: 13px; font-weight: 700; color: #f1f5f9;
+    min-width: 200px;
+  }
+  .group-meta { display: flex; gap: 32px; flex: 1; }
+  .group-stat { }
+  .group-stat .gs-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: .06em; }
+  .group-stat .gs-val { font-size: 14px; font-weight: 700; color: #e2e8f0; margin-top: 1px; }
+  .group-stat .gs-change { font-size: 11px; margin-top: 1px; }
+  .toggle-btn {
+    margin-left: auto; color: #475569; font-size: 18px;
+    transition: transform .2s; user-select: none;
+  }
+  .group-card.open .toggle-btn { transform: rotate(180deg); }
+
+  /* EMPLOYEE TABLE */
+  .emp-table-wrap { padding: 0 0 4px; display: none; }
+  .group-card.open .emp-table-wrap { display: block; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+    color: #64748b; padding: 8px 16px; text-align: right;
+    background: #151f2e; border-bottom: 1px solid #1e3a5f;
+  }
+  thead th:first-child { text-align: left; }
+  tbody tr:nth-child(even) { background: #192234; }
+  tbody tr:hover { background: #1e2d45; }
+  td {
+    padding: 7px 16px; border-bottom: 1px solid #1e293b;
+    color: #cbd5e1; font-size: 12px; text-align: right;
+  }
+  td:first-child { text-align: left; color: #e2e8f0; font-weight: 500; }
+  td .badge {
+    font-size: 10px; background: #0f2a4a; color: #60a5fa;
+    border-radius: 4px; padding: 1px 5px; margin-left: 4px;
+  }
+  tfoot td {
+    font-weight: 700; color: #f1f5f9; background: #1a2d45 !important;
+    border-top: 2px solid #2563eb; font-size: 12px;
+  }
+  tfoot td:first-child { color: #60a5fa; }
+
+  /* INACTIVE SECTION */
+  .inactive-section {
+    background: #161f2e; border: 1px solid #1e293b;
+    border-radius: 8px; padding: 12px 16px; margin-top: 16px;
+    font-size: 11px; color: #475569;
+  }
+  .inactive-section strong { color: #64748b; }
+
+  /* DELTA HELPERS */
+  .d-pos { color: #4ade80; font-weight: 600; }
+  .d-neg { color: #f87171; font-weight: 600; }
+  .d-neu { color: #94a3b8; }
+  .d-new { color: #fbbf24; font-weight: 600; }
+  .d-na  { color: #475569; }
+
+  @media (max-width: 1024px) {
+    .kpi-row { grid-template-columns: repeat(3,1fr); }
+    .group-meta { gap: 16px; flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>Fortnight Labour Dashboard</h1>
+  <div class="sub">Egg Growing Group Pty Ltd &nbsp;·&nbsp; Wages &amp; Hours Analysis</div>
+  <div class="period-badge">Period: 16 May – 29 May 2026</div>
+</div>
+
+<!-- KPI ROW -->
+<div class="kpi-row">
+  <div class="kpi highlight">
+    <div class="label">Total Wages</div>
+    <div class="value">$79,516</div>
+    <div class="change neu">16–29 May 2026</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Total Hours</div>
+    <div class="value">1,803.2</div>
+    <div class="change neu">excl. breaks</div>
+  </div>
+  <div class="kpi highlight">
+    <div class="label">Labour % Revenue</div>
+    <div class="value">10.5%</div>
+    <div class="change pos">▼ 4.2pp vs Apr</div>
+  </div>
+  <div class="kpi">
+    <div class="label">vs Prior Fortnight</div>
+    <div class="value" style="font-size:17px">$79,518</div>
+    <div class="change neu">15 May · <span class="neg">-$2 (0.0%)</span></div>
+  </div>
+  <div class="kpi">
+    <div class="label">vs Last Month</div>
+    <div class="value" style="font-size:17px">$82,606</div>
+    <div class="change">1 May · <span class="pos">-$3,090 (−3.7%)</span></div>
+  </div>
+  <div class="kpi">
+    <div class="label">3-Month WA</div>
+    <div class="value" style="font-size:17px">$81,699</div>
+    <div class="change">6-fortnight WA · <span class="pos">-$2,183 (−2.7%)</span></div>
+  </div>
+</div>
+
+<!-- LABOUR % REVENUE CHART -->
+<div class="chart-section">
+  <div class="section-title">Labour Cost as % of Revenue — Last 11 Months</div>
+  <div class="section-sub">Monthly wages (2 fortnights) ÷ monthly revenue (Xero P&amp;L) &nbsp;·&nbsp; Average: 12.1%</div>
+  <div class="chart-wrap">
+    <canvas id="labourChart"></canvas>
+  </div>
+</div>
+
+<!-- GROUPS -->
+<div class="section-title" style="margin-bottom:12px">Labour by Department — 29 May 2026</div>
+<div class="section-sub" style="margin-bottom:16px">
+  Hours = excl. breaks (By Employee) &nbsp;·&nbsp; Wages from Cost By Area &nbsp;·&nbsp;
+  <em>% vs Last Month</em> = vs 1 May period &nbsp;·&nbsp;
+  <em>3M WA</em> = weighted avg of prior 3 fortnights (weights 3-2-1)
+</div>
+
+<div class="groups-grid" id="groups"></div>
+
+<!-- INACTIVE -->
+<div class="inactive-section">
+  <strong>No activity this fortnight:</strong>
+  Maintenance Kilmore Road · Project Management (Jack Murray — 0 hrs) · Sales &amp; Marketing · Training ·
+  Roger · Nahir · Ronald &amp; Sandra · Julinio
+</div>
+
+<script>
+// ─── CHART DATA ──────────────────────────────────────────────────────────────
+const chartMonths = ['Jul 25','Aug 25','Sep 25','Oct 25','Nov 25','Dec 25','Jan 26','Feb 26','Mar 26','Apr 26','May 26'];
+const chartRevenue= [1432028,1420315,1512571,1711476,1579305,1239225,1633011,1306843,1525617,1218788,1519409];
+const chartWages  = [172267, 186140, 174398, 173439, 178231, 167986, 183487, 175311, 175522, 178249, 159034];
+const chartPct    = chartWages.map((w,i) => +(w/chartRevenue[i]*100).toFixed(2));
+const avgPct      = +(chartPct.reduce((a,b)=>a+b,0)/chartPct.length).toFixed(2);
+
+const ctx = document.getElementById('labourChart').getContext('2d');
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: chartMonths,
+    datasets: [
+      {
+        label: 'Labour % Revenue',
+        data: chartPct,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.12)',
+        borderWidth: 2.5,
+        pointBackgroundColor: chartPct.map(v => v === Math.max(...chartPct) ? '#f87171' : v === Math.min(...chartPct) ? '#4ade80' : '#3b82f6'),
+        pointRadius: 5,
+        tension: 0.35,
+        fill: true,
+      },
+      {
+        label: 'Average (12.1%)',
+        data: new Array(chartMonths.length).fill(avgPct),
+        borderColor: '#94a3b8',
+        borderWidth: 1.5,
+        borderDash: [6,4],
+        pointRadius: 0,
+        fill: false,
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: {
+        labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 16 }
+      },
+      tooltip: {
+        backgroundColor: '#1e293b',
+        borderColor: '#334155',
+        borderWidth: 1,
+        titleColor: '#f1f5f9',
+        bodyColor: '#94a3b8',
+        callbacks: {
+          label: ctx => {
+            if (ctx.datasetIndex === 0) {
+              const wages = chartWages[ctx.dataIndex];
+              const rev   = chartRevenue[ctx.dataIndex];
+              return [
+                ` Labour %: ${ctx.parsed.y.toFixed(1)}%`,
+                ` Wages: $${wages.toLocaleString()}`,
+                ` Revenue: $${(rev/1000).toFixed(0)}k`
+              ];
+            }
+            return ` Average: ${ctx.parsed.y.toFixed(1)}%`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#1e293b' } },
+      y: {
+        ticks: { color: '#64748b', font: { size: 11 }, callback: v => v.toFixed(1)+'%' },
+        grid: { color: '#1e293b' },
+        min: 8, max: 17,
+        title: { display: true, text: 'Labour / Revenue (%)', color: '#475569', font: { size: 11 } }
+      }
+    }
+  }
+});
+
+// ─── GROUP DATA ───────────────────────────────────────────────────────────────
+// pct(current, prior) → formatted % change string
+function pct(curr, prior) {
+  if (!prior || prior === 0) return '<span class="d-new">NEW</span>';
+  const p = ((curr - prior) / prior * 100);
+  const cls = p > 0.5 ? 'd-pos' : p < -0.5 ? 'd-neg' : 'd-neu';
+  const sign = p >= 0 ? '+' : '';
+  return `<span class="${cls}">${sign}${p.toFixed(1)}%</span>`;
+}
+
+// 3M weighted average (weights 3,2,1 for p1,p2,p3 newest→oldest)
+function wa3(p1, p2, p3) {
+  if (!p1 && !p2 && !p3) return 0;
+  const denom = (p1?3:0)+(p2?2:0)+(p3?1:0);
+  return ((p1||0)*3 + (p2||0)*2 + (p3||0)*1) / denom;
+}
+
+// Employee entry: [name, areaHrs, areaWages, totalHrsCurr, totalHrs15may, totalHrs1may, totalHrs17apr, multiArea]
+// For multi-area employees, totalHrs* reflects ALL areas combined
+const GROUPS = [
+  {
+    name: 'Egg Operations',
+    color: '#f59e0b',
+    hrs:  { curr:255.88, p1:255.75, p2:290.75, p3:284.22 },
+    cost: { curr:10231.49, p1:9840.68, p2:11618.48, p3:12172.70 },
+    emp: [
+      // name, areaHrs, areaWages, totHrsCurr, totHrs15may, totHrs1may, totHrs17apr
+      ['Cherese',  39.65, 2428.95, 95.19, 81.40, 84.72, 96.02, true ],
+      ['Emmaline', 17.25,  900.40, 17.25, 26.66, 26.75, 19.84       ],
+      ['Jemma',     5.17,  203.85,  5.17,  4.42,  5.00, 14.58       ],
+      ['Jess M.',   5.08,  277.70,  5.08,  0,     0,     2.00       ],
+      ['Kevin',    77.89, 2364.26, 77.89, 85.62, 87.19, 83.48       ],
+      ['Manon',    87.76, 3124.33, 87.76, 88.46, 84.99, 92.27       ],
+      ['Rhea',      9.75,  295.91,  9.75,  0,     0,     0          ],
+      ['Summer',   13.33,  636.09, 13.33, 23.44, 61.40, 32.06       ],
+    ]
+  },
+  {
+    name: 'Finance',
+    color: '#8b5cf6',
+    hrs:  { curr:80, p1:80, p2:80, p3:80 },
+    cost: { curr:5648, p1:5648, p2:5648, p3:5648 },
+    emp: [
+      ['Carmen', 80, 5648, 80, 80, 80, 80],
+    ]
+  },
+  {
+    name: 'Grading',
+    color: '#06b6d4',
+    hrs:  { curr:577.98, p1:623.71, p2:557.24, p3:596.66 },
+    cost: { curr:18225.38, p1:20640.50, p2:18187.40, p3:null },  // 17Apr cost = 0 (anomaly, excluded)
+    emp: [
+      ['Fangliu',  76.58, 2324.30, 76.58, 57.32, 70.90, 70.38],
+      ['Haruko',   85.21, 2586.33, 85.21, 73.01, 76.36, 63.66],
+      ['Jamir',    83.38, 2530.68, 83.38,  7.78,  0,     0   ],
+      ['Jumpei',   85.14, 2584.30, 85.14, 72.19, 72.15, 71.56],
+      ['Lucas',    70.52, 2140.18, 70.52, 71.80,  4.28,  0   ],
+      ['Maurizio',  9.92,  376.83,  9.92, 88.67, 90.55, 84.46],
+      ['Ruby',      9.92,  376.83,  9.92, 87.73, 92.19, 79.27],
+      ['Ryuji',    79.81, 2421.93, 79.81, 72.38, 69.81, 70.33],
+      ['Sandra',   76.00, 2884.00, 76.00, 76.00, 76.00,  0   ],
+    ]
+  },
+  {
+    name: 'Human Resources',
+    color: '#ec4899',
+    hrs:  { curr:62.74, p1:67.71, p2:70.26, p3:62.57 },
+    cost: { curr:2855.13, p1:3080.34, p2:3197.13, p3:null }, // 17Apr HR cost anomalous ($21k), excluded
+    emp: [
+      ['Amber', 62.74, 2855.13, 62.74, 67.71, 70.26, 70.24],
+    ]
+  },
+  {
+    name: 'Info Tech',
+    color: '#10b981',
+    hrs:  { curr:76, p1:76, p2:76, p3:76 },
+    cost: { curr:3910.20, p1:3910.20, p2:3910.20, p3:2846.77 },
+    emp: [
+      ['Pinal', 76, 3910.20, 76, 76, 76, 76],
+    ]
+  },
+  {
+    name: 'Maintenance — Kerrie',
+    color: '#f97316',
+    hrs:  { curr:65.17, p1:43.24, p2:66.42, p3:87.17 },
+    cost: { curr:2596.31, p1:1698.87, p2:2438.40, p3:3910.20 },
+    emp: [
+      ['Deborah', 17.00,  564.80, 42.92, 56.58, 62.49, 46.39, true],
+      ['Ross',    26.83,  979.42, 26.83, 29.24, 36.67, 43.34      ],
+      ['Wayne',   20.84, 1052.09, 33.01, 29.66, 70.90, 60.92, true],
+    ]
+  },
+  {
+    name: 'Maintenance — Monegeetta',
+    color: '#ef4444',
+    hrs:  { curr:234.65, p1:259.27, p2:273.19, p3:219.13 },
+    cost: { curr:11904.42, p1:12782.78, p2:13667.62, p3:11264.55 },
+    emp: [
+      ['Cherese', 55.54, 2527.52, 95.19, 81.40, 84.72, 96.02, true],
+      ['Deborah', 27.42,  950.16, 42.92, 56.58, 62.49, 46.39, true],
+      ['Jinus',   38.00, 1826.92, 38.00,  0,     0,     0         ],
+      ['Kylie',   40.72, 1677.73, 40.72, 62.73, 53.32, 39.23      ],
+      ['Tin',     60.80, 4307.68, 60.80, 60.80, 60.80, 60.80      ],
+      ['Wayne',   12.17,  614.41, 33.01, 29.66, 70.90, 60.92, true],
+    ]
+  },
+  {
+    name: 'Management Operations',
+    color: '#6366f1',
+    hrs:  { curr:107.60, p1:107.60, p2:107.60, p3:107.60 },
+    cost: { curr:8526.00, p1:8526.00, p2:8526.00, p3:8526.00 },
+    emp: [
+      ['Josh',   31.60, 2750.00, 31.60, 31.60, 31.60, 31.60],
+      ['Tamsyn', 76.00, 5776.00, 76.00, 76.00, 76.00, 76.00],
+    ]
+  },
+  {
+    name: 'Sales & Logistics',
+    color: '#22d3ee',
+    hrs:  { curr:354.69, p1:311.00, p2:340.71, p3:null }, // 17Apr reclassified to Sales&Marketing
+    cost: { curr:15619.47, p1:13371.82, p2:14533.07, p3:null },
+    emp: [
+      ['Andrew', 82.51, 3687.75, 82.51, 85.07, 67.83, 85.42],
+      ['Jordan', 79.00, 3594.50, 79.00, 39.76, 78.99, 72.34],
+      ['Lee',     9.50,  406.60,  9.50,  9.17, 15.16, 24.25],
+      ['Oscar',  67.00, 2429.00, 67.00, 71.00, 70.67, 69.33],
+      ['Peter',  54.75, 2701.91, 54.75, 40.08, 43.99, 33.58],
+      ['Terri',  53.93, 2799.71, 53.93, 58.92, 57.57, 51.25],
+    ]
+  },
+];
+
+// ─── RENDER GROUPS ────────────────────────────────────────────────────────────
+const container = document.getElementById('groups');
+
+GROUPS.forEach((g, gi) => {
+  const wa_cost = wa3(g.cost.p1, g.cost.p2, g.cost.p3);
+  const wa_hrs  = wa3(g.hrs.p1,  g.hrs.p2,  g.hrs.p3);
+
+  const pct_cost_lm  = pct(g.cost.curr, g.cost.p2);
+  const pct_cost_wa  = wa_cost ? pct(g.cost.curr, wa_cost) : '<span class="d-na">N/A</span>';
+  const pct_hrs_lm   = pct(g.hrs.curr, g.hrs.p2);
+  const pct_hrs_wa   = wa_hrs  ? pct(g.hrs.curr,  wa_hrs)  : '<span class="d-na">N/A</span>';
+
+  const rows = g.emp.map(e => {
+    const [name, aHrs, aWages, tHC, tH1, tH2, tH3, multi] = e;
+    const wa_h = wa3(tH1, tH2, tH3);
+    const pct_lm_h = pct(tHC, tH2);
+    const pct_wa_h = wa_h ? pct(tHC, wa_h) : '<span class="d-new">NEW</span>';
+    const multiTag = multi ? '<span class="badge">multi-dept</span>' : '';
+    return `<tr>
+      <td>${name}${multiTag}</td>
+      <td>${aHrs.toFixed(1)}</td>
+      <td>$${Math.round(aWages).toLocaleString()}</td>
+      <td>${pct_lm_h}</td>
+      <td>${pct_wa_h}</td>
+    </tr>`;
+  }).join('');
+
+  // Group footer
+  const foot = `<tr>
+    <td>GROUP TOTAL</td>
+    <td>${g.hrs.curr.toFixed(1)}</td>
+    <td>$${Math.round(g.cost.curr).toLocaleString()}</td>
+    <td>${pct_cost_lm}</td>
+    <td>${pct_cost_wa}</td>
+  </tr>`;
+
+  const dot = `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${g.color};margin-right:8px;flex-shrink:0"></span>`;
+
+  const card = document.createElement('div');
+  card.className = 'group-card' + (gi < 3 ? ' open' : '');
+  card.innerHTML = `
+    <div class="group-header" onclick="this.parentElement.classList.toggle('open')">
+      <div class="group-name">${dot}${g.name}</div>
+      <div class="group-meta">
+        <div class="group-stat">
+          <div class="gs-label">Hours</div>
+          <div class="gs-val">${g.hrs.curr.toFixed(1)}</div>
+          <div class="gs-change">${pct_hrs_lm} LM &nbsp; ${pct_hrs_wa} WA</div>
+        </div>
+        <div class="group-stat">
+          <div class="gs-label">Wages</div>
+          <div class="gs-val">$${Math.round(g.cost.curr).toLocaleString()}</div>
+          <div class="gs-change">${pct_cost_lm} LM &nbsp; ${pct_cost_wa} WA</div>
+        </div>
+        <div class="group-stat">
+          <div class="gs-label">Last Month Ref</div>
+          <div class="gs-val" style="font-size:12px;color:#64748b">$${Math.round(g.cost.p2||0).toLocaleString()}</div>
+          <div class="gs-change neu">1 May period</div>
+        </div>
+        <div class="group-stat">
+          <div class="gs-label">3M Weighted Avg</div>
+          <div class="gs-val" style="font-size:12px;color:#64748b">${wa_cost ? '$'+Math.round(wa_cost).toLocaleString() : 'N/A'}</div>
+          <div class="gs-change neu">prior 3 fortnights</div>
+        </div>
+      </div>
+      <div class="toggle-btn">▾</div>
+    </div>
+    <div class="emp-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Dept Hrs</th>
+            <th>Dept Wages</th>
+            <th>Hrs Δ vs Last Month</th>
+            <th>Hrs Δ vs 3M WA</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>${foot}</tfoot>
+      </table>
+    </div>`;
+  container.appendChild(card);
+});
+
+// ─── GRAND TOTAL ROW ─────────────────────────────────────────────────────────
+const summary = document.createElement('div');
+summary.style.cssText = 'background:#1a2d45;border:1px solid #2563eb;border-radius:10px;padding:14px 20px;display:flex;gap:40px;margin-top:4px;';
+summary.innerHTML = `
+  <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#3b82f6">All Departments Total</div>
+    <div style="font-size:18px;font-weight:700;color:#f1f5f9;margin-top:4px">$79,516 &nbsp; 1,803.2 hrs</div></div>
+  <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b">vs Last Month (1 May)</div>
+    <div style="font-size:15px;font-weight:700;color:#4ade80;margin-top:4px">−$3,090 &nbsp; (−3.7%)</div></div>
+  <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b">vs 3-Month WA</div>
+    <div style="font-size:15px;font-weight:700;color:#4ade80;margin-top:4px">−$2,183 &nbsp; (−2.7%)</div></div>
+  <div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b">Labour % Revenue</div>
+    <div style="font-size:15px;font-weight:700;color:#60a5fa;margin-top:4px">10.5% <span style="font-size:11px;color:#94a3b8">(12.1% annual avg)</span></div></div>
+`;
+container.appendChild(summary);
+</script>
+</body>
+</html>
