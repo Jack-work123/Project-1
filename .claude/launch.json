@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "debtor-tracker",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-p", "3456", "Egg Growing Group Financial Reports"],
+      "port": 3456
+    },
+    {
+      "name": "jre-financial",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-p", "3457", "JRE-Financial"],
+      "port": 3457
+    }
+  ,{
+      "name": "production-forecast",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-p", "3458", "production-forecast"],
+      "port": 3458
+    }
+  ,{
+      "name": "revenue-breakdown",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-p", "3459", "revenue-breakdown"],
+      "port": 3459
+    }
+  ]
+}

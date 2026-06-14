@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revenue Breakdown — Egg Growing Group</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232635;
+    --border: #2e3148;
+    --text: #e8eaf0;
+    --muted: #8b8fa8;
+    --ww: #00a651;
+    --coles: #e8192c;
+    --ind: #f5a623;
+    --other: #6c7adb;
+    --total: #4fc3f7;
+    --positive: #34d399;
+    --negative: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; }
+
+  /* HEADER */
+  .header { padding: 20px 28px 0; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .header-top h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .header-top .subtitle { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+  /* CONTROLS ROW */
+  .controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-bottom: 14px; }
+  .btn-group { display: flex; background: var(--bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .btn-group button { padding: 6px 14px; background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; transition: all .15s; }
+  .btn-group button.active { background: var(--surface2); color: var(--text); font-weight: 600; }
+  .btn-group button:hover:not(.active) { color: var(--text); }
+
+  .channel-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .channel-btn { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; border: 1.5px solid; background: none; cursor: pointer; font-size: 12px; font-weight: 600; transition: all .15s; }
+  .channel-btn .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .channel-btn.active { background: rgba(255,255,255,.08); }
+  .channel-btn:not(.active) { opacity: 0.45; }
+
+  .divider { width: 1px; height: 24px; background: var(--border); }
+
+  /* COMPARE SECTION */
+  .compare-wrap { display: flex; align-items: center; gap: 8px; }
+  .compare-wrap label { color: var(--muted); font-size: 12px; }
+  .compare-wrap select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+
+  /* MAIN */
+  .main { padding: 20px 28px; }
+
+  /* KPI CARDS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+  @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .kpi-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .kpi-card .value { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .kpi-card .change { font-size: 12px; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+  .kpi-card .change.up { color: var(--positive); }
+  .kpi-card .change.down { color: var(--negative); }
+  .kpi-card .change.neutral { color: var(--muted); }
+  .kpi-card .vs-label { font-size: 11px; color: var(--muted); }
+
+  /* CHARTS ROW */
+  .charts-row { display: grid; grid-template-columns: 1fr 280px; gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .chart-card h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 14px; }
+  .chart-container { position: relative; }
+
+  /* COMPARISON CHART */
+  .compare-chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 20px; display: none; }
+  .compare-chart-wrap.visible { display: block; }
+  .compare-chart-wrap h3 { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 14px; }
+
+  /* TABLE */
+  .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .table-card h3 { font-size: 13px; font-weight: 600; color: var(--muted); padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { padding: 10px 14px; text-align: right; color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  thead th:first-child { text-align: left; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 10px 14px; text-align: right; white-space: nowrap; }
+  tbody td:first-child { text-align: left; color: var(--muted); }
+  .bar-cell { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+  .mini-bar { height: 6px; border-radius: 3px; min-width: 2px; }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+  .badge.up { background: rgba(52,211,153,.15); color: var(--positive); }
+  .badge.down { background: rgba(248,113,113,.15); color: var(--negative); }
+
+  /* COLOR ACCENT BORDERS */
+  .kpi-card.ww { border-top: 3px solid var(--ww); }
+  .kpi-card.coles { border-top: 3px solid var(--coles); }
+  .kpi-card.ind { border-top: 3px solid var(--ind); }
+  .kpi-card.other { border-top: 3px solid var(--other); }
+  .kpi-card.total { border-top: 3px solid var(--total); }
+
+  .no-data { padding: 40px; text-align: center; color: var(--muted); }
+
+  /* PERIOD NAVIGATOR */
+  .period-nav { display: flex; align-items: center; gap: 8px; }
+  .period-nav button { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+  .period-nav button:hover { color: var(--text); border-color: var(--muted); }
+  .period-nav .period-label { font-size: 13px; color: var(--text); min-width: 120px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>Revenue Breakdown</h1>
+      <div class="subtitle">Egg Growing Group Pty Ltd &nbsp;·&nbsp; Business Weekly Scorecard</div>
+    </div>
+    <div class="period-nav">
+      <button id="prevBtn" title="Previous period">&#8249;</button>
+      <span class="period-label" id="periodLabel">All time</span>
+      <button id="nextBtn" title="Next period">&#8250;</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <!-- Period granularity -->
+    <div class="btn-group" id="granGroup">
+      <button data-gran="weekly" class="active">Weekly</button>
+      <button data-gran="monthly">Monthly</button>
+      <button data-gran="yearly">Yearly</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Channel filters -->
+    <div class="channel-filters">
+      <button class="channel-btn active" data-ch="all" style="border-color:var(--text);color:var(--text)">
+        <span class="dot" style="background:var(--text)"></span> All
+      </button>
+      <button class="channel-btn active" data-ch="woolies" style="border-color:var(--ww);color:var(--ww)">
+        <span class="dot" style="background:var(--ww)"></span> Woolworths
+      </button>
+      <button class="channel-btn active" data-ch="coles" style="border-color:var(--coles);color:var(--coles)">
+        <span class="dot" style="background:var(--coles)"></span> Coles
+      </button>
+      <button class="channel-btn active" data-ch="ind" style="border-color:var(--ind);color:var(--ind)">
+        <span class="dot" style="background:var(--ind)"></span> Independents
+      </button>
+      <button class="channel-btn active" data-ch="other" style="border-color:var(--other);color:var(--other)">
+        <span class="dot" style="background:var(--other)"></span> Other
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Compare -->
+    <div class="compare-wrap">
+      <label>Compare to:</label>
+      <select id="compareSelect">
+        <option value="none">None</option>
+        <option value="prev">Previous period</option>
+        <option value="prevyear">Previous year</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card total">
+      <div class="label">Total Revenue</div>
+      <div class="value" id="kpi-total">—</div>
+      <div class="change neutral" id="kpi-total-chg"></div>
+      <div class="vs-label" id="kpi-total-vs"></div>
+    </div>
+    <div class="kpi-card ww">
+      <div class="label">Woolworths</div>
+      <div class="value" id="kpi-ww">—</div>
+      <div class="change neutral" id="kpi-ww-chg"></div>
+      <div class="vs-label" id="kpi-ww-pct"></div>
+    </div>
+    <div class="kpi-card coles">
+      <div class="label">Coles</div>
+      <div class="value" id="kpi-coles">—</div>
+      <div class="change neutral" id="kpi-coles-chg"></div>
+      <div class="vs-label" id="kpi-coles-pct"></div>
+    </div>
+    <div class="kpi-card ind">
+      <div class="label">Independents</div>
+      <div class="value" id="kpi-ind">—</div>
+      <div class="change neutral" id="kpi-ind-chg"></div>
+      <div class="vs-label" id="kpi-ind-pct"></div>
+    </div>
+    <div class="kpi-card other">
+      <div class="label">Other / Untracked</div>
+      <div class="value" id="kpi-other">—</div>
+      <div class="change neutral" id="kpi-other-chg"></div>
+      <div class="vs-label" id="kpi-other-pct"></div>
+    </div>
+  </div>
+
+  <!-- MAIN CHARTS ROW -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3 id="mainChartTitle">Revenue by Channel</h3>
+      <div class="chart-container" style="height:280px">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Channel Mix</h3>
+      <div class="chart-container" style="height:280px">
+        <canvas id="donutChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARISON CHART (shown when compare selected) -->
+  <div class="compare-chart-wrap" id="compareChartWrap">
+    <h3 id="compareChartTitle">Period Comparison</h3>
+    <div class="chart-container" style="height:240px">
+      <canvas id="compareChart"></canvas>
+    </div>
+  </div>
+
+  <!-- DATA TABLE -->
+  <div class="table-card">
+    <h3 id="tableTitle">Weekly Detail</h3>
+    <div class="table-wrap">
+      <table>
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const RAW = [{"date": "2022-10-02", "year": 2022, "month": 10, "week_num": 40, "period": "02/10-08/10", "total": 151819.0, "woolies": 0, "coles": 0, "ind": 0, "other": 151819.0, "total_boxes": 1963, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2022-10-09", "year": 2022, "month": 10, "week_num": 41, "period": "09/10-15/10", "total": 188613.0, "woolies": 0, "coles": 0, "ind": 0, "other": 188613.0, "total_boxes": 2431, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2022-10-16", "year": 2022, "month": 10, "week_num": 42, "period": "16/10-22/10", "total": 193864.0, "woolies": 0, "coles": 0, "ind": 0, "other": 193864.0, "total_boxes": 2453, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2022-10-23", "year": 2022, "month": 10, "week_num": 43, "period": "23/10-29/10", "total": 185076.0, "woolies": 0, "coles": 0, "ind": 0, "other": 185076.0, "total_boxes": 2376, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2022-10-30", "year": 2022, "month": 10, "week_num": 44, "period": "30/10-05/11", "total": 161570.0, "woolies": 0, "coles": 0, "ind": 0, "other": 161570.0, "total_boxes": 1202, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2022-11-06", "year": 2022, "month": 11, "week_num": 45, "period": "06/11-12/11", "total": 185855.0, "woolies": 0, "coles": 0, "ind": 0, "other": 185855.0, "total_boxes": 2366, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2022-11-13", "year": 2022, "month": 11, "week_num": 46, "period": "13/11-19/11", "total": 173871.0, "woolies": 0, "coles": 0, "ind": 0, "other": 173871.0, "total_boxes": 2210, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2022-11-20", "year": 2022, "month": 11, "week_num": 47, "period": "20/11-26/11", "total": 151184.0, "woolies": 0, "coles": 0, "ind": 0, "other": 151184.0, "total_boxes": 1919, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2022-11-27", "year": 2022, "month": 11, "week_num": 48, "period": "27/11-03/12", "total": 128012.0, "woolies": 0, "coles": 0, "ind": 0, "other": 128012.0, "total_boxes": 1664, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2022-12-04", "year": 2022, "month": 12, "week_num": 49, "period": "04/12-10/12", "total": 138898.0, "woolies": 0, "coles": 0, "ind": 0, "other": 138898.0, "total_boxes": 1771, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2022-12-11", "year": 2022, "month": 12, "week_num": 50, "period": "11/12-17/12", "total": 180243.0, "woolies": 0, "coles": 0, "ind": 0, "other": 180243.0, "total_boxes": 2314, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2022-12-18", "year": 2022, "month": 12, "week_num": 51, "period": "18/12-24/12", "total": 187693.0, "woolies": 0, "coles": 0, "ind": 0, "other": 187693.0, "total_boxes": 2386, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2022-12-25", "year": 2022, "month": 12, "week_num": 52, "period": "25/12-31/12", "total": 158349.0, "woolies": 0, "coles": 0, "ind": 0, "other": 158349.0, "total_boxes": 2016, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-01-01", "year": 2023, "month": 1, "week_num": 1, "period": "01/01-07/01", "total": 164166.0, "woolies": 0, "coles": 0, "ind": 0, "other": 164166.0, "total_boxes": 2102, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-01-08", "year": 2023, "month": 1, "week_num": 2, "period": "08/01-14/01", "total": 196464.0, "woolies": 0, "coles": 0, "ind": 0, "other": 196464.0, "total_boxes": 2504, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-01-15", "year": 2023, "month": 1, "week_num": 3, "period": "15/01-21/01", "total": 168935.0, "woolies": 0, "coles": 0, "ind": 0, "other": 168935.0, "total_boxes": 2153, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-01-22", "year": 2023, "month": 1, "week_num": 4, "period": "22/01-28/01", "total": 178044.0, "woolies": 0, "coles": 0, "ind": 0, "other": 178044.0, "total_boxes": 2260, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-01-29", "year": 2023, "month": 1, "week_num": 5, "period": "29/01-04/02", "total": 185595.0, "woolies": 0, "coles": 0, "ind": 0, "other": 185595.0, "total_boxes": 2378, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-02-05", "year": 2023, "month": 2, "week_num": 6, "period": "05/02-11/02", "total": 193288.0, "woolies": 0, "coles": 0, "ind": 0, "other": 193288.0, "total_boxes": 2460, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-02-12", "year": 2023, "month": 2, "week_num": 7, "period": "12/02-18/02", "total": 194531.7, "woolies": 0, "coles": 0, "ind": 0, "other": 194531.7, "total_boxes": 2470, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-02-19", "year": 2023, "month": 2, "week_num": 8, "period": "19/02-25/02", "total": 200106.15, "woolies": 0, "coles": 0, "ind": 0, "other": 200106.15, "total_boxes": 2561, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-02-26", "year": 2023, "month": 2, "week_num": 9, "period": "26/02-04/03", "total": 0, "woolies": 0, "coles": 0, "ind": 0, "other": 0, "total_boxes": 0, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-03-05", "year": 2023, "month": 3, "week_num": 10, "period": "05/03-11/03", "total": 0, "woolies": 0, "coles": 0, "ind": 0, "other": 0, "total_boxes": 0, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-03-12", "year": 2023, "month": 3, "week_num": 11, "period": "12/03-18/03", "total": 0, "woolies": 0, "coles": 0, "ind": 0, "other": 0, "total_boxes": 0, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-03-19", "year": 2023, "month": 3, "week_num": 12, "period": "19/03-25/03", "total": 181514.0, "woolies": 0, "coles": 0, "ind": 0, "other": 181514.0, "total_boxes": 2306, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-03-26", "year": 2023, "month": 3, "week_num": 13, "period": "26/03-01/04", "total": 185858.0, "woolies": 0, "coles": 0, "ind": 0, "other": 185858.0, "total_boxes": 2357, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-04-02", "year": 2023, "month": 4, "week_num": 0, "period": "02/04-08/04", "total": 164359.0, "woolies": 0, "coles": 0, "ind": 0, "other": 164359.0, "total_boxes": 2023, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-04-09", "year": 2023, "month": 4, "week_num": 15, "period": "09/04-15/04", "total": 177789.0, "woolies": 0, "coles": 0, "ind": 0, "other": 177789.0, "total_boxes": 2261, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-04-16", "year": 2023, "month": 4, "week_num": 16, "period": "16/04-22/04", "total": 171344.0, "woolies": 0, "coles": 0, "ind": 0, "other": 171344.0, "total_boxes": 2195, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-04-23", "year": 2023, "month": 4, "week_num": 17, "period": "23/04-29/4", "total": 175833.5, "woolies": 0, "coles": 0, "ind": 0, "other": 175833.5, "total_boxes": 2264, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-04-30", "year": 2023, "month": 4, "week_num": 18, "period": "30/04-06/05", "total": 181211.0, "woolies": 0, "coles": 0, "ind": 0, "other": 181211.0, "total_boxes": 2322, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-05-07", "year": 2023, "month": 5, "week_num": 19, "period": "07/05-13/05", "total": 193253.6, "woolies": 0, "coles": 0, "ind": 0, "other": 193253.6, "total_boxes": 2471, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-05-14", "year": 2023, "month": 5, "week_num": 20, "period": "14/05-20/05", "total": 204824.0, "woolies": 0, "coles": 0, "ind": 0, "other": 204824.0, "total_boxes": 2516, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-05-21", "year": 2023, "month": 5, "week_num": 21, "period": "21/05-27/05", "total": 187374.0, "woolies": 0, "coles": 0, "ind": 0, "other": 187374.0, "total_boxes": 2401, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-05-28", "year": 2023, "month": 5, "week_num": 22, "period": "28/05-03/06", "total": 192977.0, "woolies": 0, "coles": 0, "ind": 0, "other": 192977.0, "total_boxes": 2467, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-06-04", "year": 2023, "month": 6, "week_num": 23, "period": "04/06-10/06", "total": 185341.75, "woolies": 0, "coles": 0, "ind": 0, "other": 185341.75, "total_boxes": 2374, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-06-11", "year": 2023, "month": 6, "week_num": 24, "period": "11/06-17/06", "total": 181674.0, "woolies": 0, "coles": 0, "ind": 0, "other": 181674.0, "total_boxes": 2346, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-06-18", "year": 2023, "month": 6, "week_num": 25, "period": "18/06-25/06", "total": 195423.0, "woolies": 0, "coles": 0, "ind": 0, "other": 195423.0, "total_boxes": 2500, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-06-25", "year": 2023, "month": 6, "week_num": 26, "period": "25/06-01/07", "total": 192805.0, "woolies": 0, "coles": 0, "ind": 0, "other": 192805.0, "total_boxes": 2463, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-07-02", "year": 2023, "month": 7, "week_num": 27, "period": "02/07-08/07", "total": 196452.0, "woolies": 0, "coles": 0, "ind": 0, "other": 196452.0, "total_boxes": 2492, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-07-09", "year": 2023, "month": 7, "week_num": 28, "period": "09/07-15/07", "total": 196618.0, "woolies": 0, "coles": 0, "ind": 0, "other": 196618.0, "total_boxes": 2506, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-07-16", "year": 2023, "month": 7, "week_num": 29, "period": "16/07-22/07", "total": 218775.0, "woolies": 0, "coles": 0, "ind": 0, "other": 218775.0, "total_boxes": 2783, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-07-23", "year": 2023, "month": 7, "week_num": 30, "period": "23/07-29/07", "total": 203939.0, "woolies": 0, "coles": 0, "ind": 0, "other": 203939.0, "total_boxes": 2603, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-07-30", "year": 2023, "month": 7, "week_num": 31, "period": "30/07-05/08", "total": 207722.0, "woolies": 0, "coles": 0, "ind": 0, "other": 207722.0, "total_boxes": 2662, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-08-06", "year": 2023, "month": 8, "week_num": 32, "period": "06/08-12/08", "total": 192169.0, "woolies": 0, "coles": 0, "ind": 0, "other": 192169.0, "total_boxes": 2325, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-08-13", "year": 2023, "month": 8, "week_num": 33, "period": "13/08-19/8", "total": 195401.5, "woolies": 0, "coles": 0, "ind": 0, "other": 195401.5, "total_boxes": 2396, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-08-20", "year": 2023, "month": 8, "week_num": 34, "period": "20/8-26/8", "total": 234641.0, "woolies": 0, "coles": 0, "ind": 0, "other": 234641.0, "total_boxes": 2766, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-08-27", "year": 2023, "month": 8, "week_num": 35, "period": "27/8-2/9", "total": 236895.0, "woolies": 0, "coles": 0, "ind": 0, "other": 236895.0, "total_boxes": 2794, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-09-03", "year": 2023, "month": 9, "week_num": 36, "period": "3/9-7/9", "total": 205063.0, "woolies": 0, "coles": 0, "ind": 0, "other": 205063.0, "total_boxes": 2375, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-09-08", "year": 2023, "month": 9, "week_num": 37, "period": "8/9-14/9", "total": 219548.0, "woolies": 0, "coles": 0, "ind": 0, "other": 219548.0, "total_boxes": 2617, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-09-15", "year": 2023, "month": 9, "week_num": 38, "period": "15/9-21/9", "total": 209798.0, "woolies": 0, "coles": 0, "ind": 0, "other": 209798.0, "total_boxes": 2498, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-09-22", "year": 2023, "month": 9, "week_num": 39, "period": "22/9-28/9", "total": 205437.0, "woolies": 0, "coles": 0, "ind": 0, "other": 205437.0, "total_boxes": 2423, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-09-29", "year": 2023, "month": 9, "week_num": 40, "period": "29/09-5/10", "total": 216139.0, "woolies": 0, "coles": 0, "ind": 0, "other": 216139.0, "total_boxes": 2558, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-10-06", "year": 2023, "month": 10, "week_num": 41, "period": "6/10-12/10", "total": 210199.0, "woolies": 0, "coles": 0, "ind": 0, "other": 210199.0, "total_boxes": 2497, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-10-13", "year": 2023, "month": 10, "week_num": 42, "period": "13/10-19/10", "total": 226678.0, "woolies": 0, "coles": 0, "ind": 0, "other": 226678.0, "total_boxes": 2661, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-10-20", "year": 2023, "month": 10, "week_num": 43, "period": "20/10-26/10", "total": 208898.0, "woolies": 0, "coles": 0, "ind": 0, "other": 208898.0, "total_boxes": 2480, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-10-27", "year": 2023, "month": 10, "week_num": 44, "period": "27/10-2/11", "total": 215136.0, "woolies": 0, "coles": 0, "ind": 0, "other": 215136.0, "total_boxes": 2540, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-11-03", "year": 2023, "month": 11, "week_num": 45, "period": "3/11-9/11", "total": 189462.0, "woolies": 0, "coles": 0, "ind": 0, "other": 189462.0, "total_boxes": 2244, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-11-10", "year": 2023, "month": 11, "week_num": 46, "period": "10/11-16/11", "total": 212104.0, "woolies": 0, "coles": 0, "ind": 0, "other": 212104.0, "total_boxes": 2492, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-11-17", "year": 2023, "month": 11, "week_num": 47, "period": "17/11-23/11", "total": 206153.0, "woolies": 0, "coles": 0, "ind": 0, "other": 206153.0, "total_boxes": 2443, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-11-24", "year": 2023, "month": 11, "week_num": 48, "period": "24/11-30/11", "total": 204720.0, "woolies": 0, "coles": 0, "ind": 0, "other": 204720.0, "total_boxes": 2416, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-12-01", "year": 2023, "month": 12, "week_num": 49, "period": "1/12-7/12", "total": 194877.0, "woolies": 0, "coles": 0, "ind": 0, "other": 194877.0, "total_boxes": 2288, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-12-08", "year": 2023, "month": 12, "week_num": 50, "period": "8/12-14/12", "total": 241618.0, "woolies": 0, "coles": 0, "ind": 0, "other": 241618.0, "total_boxes": 2909, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-12-15", "year": 2023, "month": 12, "week_num": 51, "period": "15/12-21/12", "total": 245099.0, "woolies": 0, "coles": 0, "ind": 0, "other": 245099.0, "total_boxes": 2878, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2023-12-22", "year": 2023, "month": 12, "week_num": 52, "period": "22/12-28/12", "total": 197030.0, "woolies": 0, "coles": 0, "ind": 0, "other": 197030.0, "total_boxes": 2320, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-12-29", "year": 2024, "month": 12, "week_num": 1, "period": "29/12-4/1", "total": 224382.0, "woolies": 0, "coles": 0, "ind": 0, "other": 224382.0, "total_boxes": 2616, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-01-05", "year": 2024, "month": 1, "week_num": 2, "period": "5/1-11/1", "total": 206159.0, "woolies": 0, "coles": 0, "ind": 0, "other": 206159.0, "total_boxes": 2430, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-01-12", "year": 2024, "month": 1, "week_num": 3, "period": "12/1-18/1", "total": 244716.0, "woolies": 0, "coles": 0, "ind": 0, "other": 244716.0, "total_boxes": 2868, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-01-19", "year": 2024, "month": 1, "week_num": 4, "period": "19/1-25/1", "total": 224994.0, "woolies": 0, "coles": 0, "ind": 0, "other": 224994.0, "total_boxes": 2646, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-01-26", "year": 2024, "month": 1, "week_num": 5, "period": "26/1-1/2", "total": 242907.0, "woolies": 0, "coles": 0, "ind": 0, "other": 242907.0, "total_boxes": 2861, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-02-02", "year": 2024, "month": 2, "week_num": 6, "period": "2/2-8/2", "total": 255457.0, "woolies": 0, "coles": 0, "ind": 0, "other": 255457.0, "total_boxes": 3006, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-02-09", "year": 2024, "month": 2, "week_num": 7, "period": "9/2-15/2", "total": 224915.0, "woolies": 0, "coles": 0, "ind": 0, "other": 224915.0, "total_boxes": 2647, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-02-16", "year": 2024, "month": 2, "week_num": 8, "period": "16/2-22/2", "total": 232880.0, "woolies": 0, "coles": 0, "ind": 0, "other": 232880.0, "total_boxes": 2767, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-02-23", "year": 2024, "month": 2, "week_num": 9, "period": "23/2-29/2", "total": 259258.0, "woolies": 0, "coles": 0, "ind": 0, "other": 259258.0, "total_boxes": 3033, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-03-01", "year": 2024, "month": 3, "week_num": 10, "period": "1/3-7/3", "total": 262920.0, "woolies": 0, "coles": 0, "ind": 0, "other": 262920.0, "total_boxes": 3093, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-03-08", "year": 2024, "month": 3, "week_num": 11, "period": "8/3-14/3", "total": 202629.0, "woolies": 0, "coles": 0, "ind": 0, "other": 202629.0, "total_boxes": 2382, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-03-15", "year": 2024, "month": 3, "week_num": 12, "period": "15/3-21/3", "total": 307337.0, "woolies": 0, "coles": 0, "ind": 0, "other": 307337.0, "total_boxes": 3616, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-03-22", "year": 2024, "month": 3, "week_num": 13, "period": "22/3-27/3", "total": 263685.0, "woolies": 0, "coles": 0, "ind": 0, "other": 263685.0, "total_boxes": 3094, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-03-28", "year": 2024, "month": 3, "week_num": 14, "period": "28/3-4/4", "total": 215373.0, "woolies": 0, "coles": 0, "ind": 0, "other": 215373.0, "total_boxes": 2532, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-04-05", "year": 2024, "month": 4, "week_num": 15, "period": "5/4-11/4", "total": 238578.0, "woolies": 0, "coles": 0, "ind": 0, "other": 238578.0, "total_boxes": 2837, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-04-12", "year": 2024, "month": 4, "week_num": 16, "period": "12/4-18/4", "total": 285408.0, "woolies": 0, "coles": 0, "ind": 0, "other": 285408.0, "total_boxes": 3364, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-04-19", "year": 2024, "month": 4, "week_num": 17, "period": "19/4-25/4", "total": 260977.0, "woolies": 0, "coles": 0, "ind": 0, "other": 260977.0, "total_boxes": 3106, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-04-26", "year": 2024, "month": 4, "week_num": 18, "period": "26/4-2/5", "total": 268994.0, "woolies": 0, "coles": 0, "ind": 0, "other": 268994.0, "total_boxes": 3201, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-05-03", "year": 2024, "month": 5, "week_num": 19, "period": "3/5-9/5", "total": 278712.0, "woolies": 0, "coles": 0, "ind": 0, "other": 278712.0, "total_boxes": 3334, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-05-10", "year": 2024, "month": 5, "week_num": 20, "period": "10/05-16/5", "total": 227720.0, "woolies": 0, "coles": 0, "ind": 0, "other": 227720.0, "total_boxes": 2701, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-05-17", "year": 2024, "month": 5, "week_num": 21, "period": "17/5-23/5", "total": 233353.0, "woolies": 0, "coles": 0, "ind": 0, "other": 233353.0, "total_boxes": 2733, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-05-24", "year": 2024, "month": 5, "week_num": 22, "period": "24/5-30/5", "total": 234248.0, "woolies": 0, "coles": 0, "ind": 0, "other": 234248.0, "total_boxes": 2706, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-05-31", "year": 2024, "month": 5, "week_num": 23, "period": "31/05-6/6", "total": 209366.0, "woolies": 0, "coles": 0, "ind": 0, "other": 209366.0, "total_boxes": 2412, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-06-07", "year": 2024, "month": 6, "week_num": 24, "period": "7/6-13/6", "total": 252661.0, "woolies": 0, "coles": 0, "ind": 0, "other": 252661.0, "total_boxes": 2820, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-06-14", "year": 2024, "month": 6, "week_num": 25, "period": "14/6-20/6", "total": 266233.0, "woolies": 0, "coles": 0, "ind": 0, "other": 266233.0, "total_boxes": 3112, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-06-21", "year": 2024, "month": 6, "week_num": 25, "period": "21/06-27/06", "total": 226182.0, "woolies": 0, "coles": 0, "ind": 0, "other": 226182.0, "total_boxes": 2543, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-06-28", "year": 2024, "month": 6, "week_num": 27, "period": "28/06-4/7", "total": 213480.0, "woolies": 0, "coles": 0, "ind": 0, "other": 213480.0, "total_boxes": 2408, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-07-05", "year": 2024, "month": 7, "week_num": 28, "period": "5/7 to 11/7", "total": 237558.0, "woolies": 0, "coles": 0, "ind": 0, "other": 237558.0, "total_boxes": 2611, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-07-12", "year": 2024, "month": 7, "week_num": 29, "period": "12/7 to 18/7", "total": 257188.0, "woolies": 0, "coles": 0, "ind": 0, "other": 257188.0, "total_boxes": 2916, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-07-19", "year": 2024, "month": 7, "week_num": 30, "period": "19/7 to 25/7", "total": 209392.0, "woolies": 0, "coles": 0, "ind": 0, "other": 209392.0, "total_boxes": 2387, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-07-26", "year": 2024, "month": 7, "week_num": 31, "period": "26/7 to 1/8", "total": 217237.0, "woolies": 0, "coles": 0, "ind": 0, "other": 217237.0, "total_boxes": 2520, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-08-02", "year": 2024, "month": 8, "week_num": 32, "period": "2/8 to 8/8", "total": 213239.0, "woolies": 0, "coles": 0, "ind": 0, "other": 213239.0, "total_boxes": 2460, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-08-09", "year": 2024, "month": 8, "week_num": 33, "period": "9/8 to 15/8", "total": 218806.0, "woolies": 0, "coles": 0, "ind": 0, "other": 218806.0, "total_boxes": 2507, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-08-16", "year": 2024, "month": 8, "week_num": 34, "period": "16/08 to 22/8", "total": 256256.0, "woolies": 0, "coles": 0, "ind": 0, "other": 256256.0, "total_boxes": 3005, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-08-23", "year": 2024, "month": 8, "week_num": 35, "period": "23/08-29/08", "total": 233877.0, "woolies": 0, "coles": 0, "ind": 0, "other": 233877.0, "total_boxes": 2844, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-08-30", "year": 2024, "month": 8, "week_num": 36, "period": "30/8-5/9", "total": 231613.0, "woolies": 0, "coles": 0, "ind": 0, "other": 231613.0, "total_boxes": 2787, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-09-06", "year": 2024, "month": 9, "week_num": 37, "period": "6/9 - 12/9", "total": 246255.0, "woolies": 0, "coles": 0, "ind": 0, "other": 246255.0, "total_boxes": 2747, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-09-13", "year": 2024, "month": 9, "week_num": 38, "period": "13/9-19/9", "total": 229020.0, "woolies": 0, "coles": 0, "ind": 0, "other": 229020.0, "total_boxes": 2489, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-09-20", "year": 2024, "month": 9, "week_num": 39, "period": "20/9-25/9    23/9 -29/9", "total": 216495.0, "woolies": 0, "coles": 0, "ind": 0, "other": 216495.0, "total_boxes": 2346, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-09-26", "year": 2024, "month": 9, "week_num": 40, "period": "26/9 - 3/10 30/9-6/10", "total": 286276.0, "woolies": 0, "coles": 0, "ind": 0, "other": 286276.0, "total_boxes": 3029, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-10-04", "year": 2024, "month": 10, "week_num": 41, "period": "4/10 - 10/10  7/10-13/10", "total": 252345.0, "woolies": 0, "coles": 0, "ind": 0, "other": 252345.0, "total_boxes": 2634, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-10-11", "year": 2024, "month": 10, "week_num": 42, "period": "11/10 - 17/10  14/10-20/10", "total": 242101.0, "woolies": 0, "coles": 0, "ind": 0, "other": 242101.0, "total_boxes": 2573, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-10-18", "year": 2024, "month": 10, "week_num": 43, "period": "18/10 - 24/10", "total": 276346.0, "woolies": 0, "coles": 0, "ind": 0, "other": 276346.0, "total_boxes": 2896, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-10-25", "year": 2024, "month": 10, "week_num": 44, "period": "25/10-31/10", "total": 328468.0, "woolies": 0, "coles": 0, "ind": 0, "other": 328468.0, "total_boxes": 3562, "woolies_boxes": 0, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-11-01", "year": 2024, "month": 11, "week_num": 45, "period": "1/11 - 7/11", "total": 369048.0, "woolies": 211565.0, "coles": 0, "ind": 0, "other": 157483.0, "total_boxes": 3980, "woolies_boxes": 2325, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-11-08", "year": 2024, "month": 11, "week_num": 46, "period": "8/11 - 14/11", "total": 372548.0, "woolies": 233911.0, "coles": 0, "ind": 0, "other": 138637.0, "total_boxes": 3991, "woolies_boxes": 2542, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-11-15", "year": 2024, "month": 11, "week_num": 47, "period": "15/11 - 21/11", "total": 363479.0, "woolies": 205623.0, "coles": 0, "ind": 0, "other": 157856.0, "total_boxes": 3866, "woolies_boxes": 2270, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-11-22", "year": 2024, "month": 11, "week_num": 48, "period": "22/11 - 28/11", "total": 364585.0, "woolies": 205392.0, "coles": 0, "ind": 0, "other": 159193.0, "total_boxes": 3800, "woolies_boxes": 2214, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-11-29", "year": 2024, "month": 11, "week_num": 49, "period": "29/11 - 05/12", "total": 357904.0, "woolies": 208348.0, "coles": 0, "ind": 0, "other": 149556.0, "total_boxes": 3777, "woolies_boxes": 2265, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-12-06", "year": 2024, "month": 12, "week_num": 50, "period": "06/12 - 12/12", "total": 362285.0, "woolies": 197331.0, "coles": 0, "ind": 0, "other": 164954.0, "total_boxes": 3824, "woolies_boxes": 2144, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-12-13", "year": 2024, "month": 12, "week_num": 51, "period": "13/12- 19/12", "total": 423808.0, "woolies": 222172.0, "coles": 0, "ind": 0, "other": 201636.0, "total_boxes": 4506, "woolies_boxes": 2433, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-12-20", "year": 2024, "month": 12, "week_num": 52, "period": "20/12- 26/12", "total": 397952.0, "woolies": 217902.0, "coles": 0, "ind": 0, "other": 180050.0, "total_boxes": 4261, "woolies_boxes": 2414, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2024-12-27", "year": 2024, "month": 12, "week_num": 1, "period": "27/12- 02/01", "total": 471957.0, "woolies": 208311.0, "coles": 0, "ind": 0, "other": 263646.0, "total_boxes": 4116, "woolies_boxes": 2279, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2025-01-03", "year": 2025, "month": 1, "week_num": 2, "period": "03/01- 09/01", "total": 439910.0, "woolies": 252922.0, "coles": 0, "ind": 0, "other": 186988.0, "total_boxes": 4694, "woolies_boxes": 2798, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2025-01-10", "year": 2025, "month": 1, "week_num": 3, "period": "10/01- 16/01", "total": 368101.0, "woolies": 234756.0, "coles": 0, "ind": 0, "other": 133345.0, "total_boxes": 4034, "woolies_boxes": 2604, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2025-01-17", "year": 2025, "month": 1, "week_num": 4, "period": "17/01- 23/01", "total": 445409.0, "woolies": 244490.0, "coles": 0, "ind": 0, "other": 200919.0, "total_boxes": 4781, "woolies_boxes": 2688, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2025-01-24", "year": 2025, "month": 1, "week_num": 5, "period": "24/01- 30/01", "total": 378251.0, "woolies": 202049.0, "coles": 0, "ind": 0, "other": 176202.0, "total_boxes": 3989, "woolies_boxes": 2171, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2025-01-31", "year": 2025, "month": 1, "week_num": 6, "period": "31/01- 06/02", "total": 393561.0, "woolies": 205992.0, "coles": 0, "ind": 0, "other": 187569.0, "total_boxes": 4162, "woolies_boxes": 2221, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2025-02-07", "year": 2025, "month": 2, "week_num": 7, "period": "07/02- 13/02", "total": 403086.0, "woolies": 235354.0, "coles": 0, "ind": 0, "other": 167732.0, "total_boxes": 4312, "woolies_boxes": 2562, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2025-02-14", "year": 2025, "month": 2, "week_num": 8, "period": "14/02- 20/02", "total": 341418.0, "woolies": 223675.0, "coles": 0, "ind": 0, "other": 117743.0, "total_boxes": 3649, "woolies_boxes": 2427, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2025-02-21", "year": 2025, "month": 2, "week_num": 9, "period": "21/02- 27/02", "total": 397974.0, "woolies": 238586.0, "coles": 0, "ind": 0, "other": 159388.0, "total_boxes": 4233, "woolies_boxes": 2599, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2025-02-28", "year": 2025, "month": 2, "week_num": 10, "period": "28/02- 06/03", "total": 391099.0, "woolies": 245662.0, "coles": 0, "ind": 0, "other": 145437.0, "total_boxes": 4189, "woolies_boxes": 2667, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2025-03-07", "year": 2025, "month": 3, "week_num": 11, "period": "07/03- 13/03", "total": 399171.0, "woolies": 231595.0, "coles": 0, "ind": 0, "other": 167576.0, "total_boxes": 4289, "woolies_boxes": 2519, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2025-03-14", "year": 2025, "month": 3, "week_num": 12, "period": "14/03- 20/03", "total": 387429.0, "woolies": 228330.0, "coles": 0, "ind": 0, "other": 159099.0, "total_boxes": 4156, "woolies_boxes": 2478, "coles_boxes": 0, "ind_boxes": 0}, {"date": "2025-03-21", "year": 2025, "month": 3, "week_num": 13, "period": "21/03- 27/03  23/03-29/03", "total": 377161.0, "woolies": 224236.0, "coles": 136932.0, "ind": 15993.0, "other": 0, "total_boxes": 4016, "woolies_boxes": 2437, "coles_boxes": 1400, "ind_boxes": 179}, {"date": "2025-03-28", "year": 2025, "month": 3, "week_num": 14, "period": "28/03- 03/04  30/03-04/04", "total": 380165.0, "woolies": 233064.0, "coles": 132054.0, "ind": 15047.0, "other": 0, "total_boxes": 4050, "woolies_boxes": 2520, "coles_boxes": 1360, "ind_boxes": 170}, {"date": "2025-04-04", "year": 2025, "month": 4, "week_num": 15, "period": "04/04- 10/04  05/04-11/04", "total": 391793.0, "woolies": 235014.0, "coles": 140274.0, "ind": 16505.0, "other": 0, "total_boxes": 4172, "woolies_boxes": 2542, "coles_boxes": 1440, "ind_boxes": 190}, {"date": "2025-04-11", "year": 2025, "month": 4, "week_num": 16, "period": "11/04- 16/04  12/04-18/04", "total": 301315.0, "woolies": 144618.0, "coles": 140766.0, "ind": 15931.0, "other": 0, "total_boxes": 3177, "woolies_boxes": 1554, "coles_boxes": 1440, "ind_boxes": 183}, {"date": "2025-04-17", "year": 2025, "month": 4, "week_num": 17, "period": "17/04- 23/04  19/04-25/04", "total": 466893.0, "woolies": 303561.0, "coles": 146484.0, "ind": 16848.0, "other": 0, "total_boxes": 4972, "woolies_boxes": 3257, "coles_boxes": 1520, "ind_boxes": 195}, {"date": "2025-04-24", "year": 2025, "month": 4, "week_num": 18, "period": "24/04- 01/05  27/04-03/05", "total": 402273.0, "woolies": 243882.0, "coles": 139440.0, "ind": 18951.0, "other": 0, "total_boxes": 4212, "woolies_boxes": 2586, "coles_boxes": 1400, "ind_boxes": 226}, {"date": "2025-05-02", "year": 2025, "month": 5, "week_num": 19, "period": "02/05- 08/05  04/05-11/05", "total": 404868.0, "woolies": 237097.0, "coles": 147888.0, "ind": 19883.0, "other": 0, "total_boxes": 4202, "woolies_boxes": 2503, "coles_boxes": 1480, "ind_boxes": 219}, {"date": "2025-05-09", "year": 2025, "month": 5, "week_num": 20, "period": "09/05- 15/05  12/05-17/05", "total": 437426.0, "woolies": 239613.0, "coles": 181932.0, "ind": 15881.0, "other": 0, "total_boxes": 4621, "woolies_boxes": 2561, "coles_boxes": 1880, "ind_boxes": 180}, {"date": "2025-05-16", "year": 2025, "month": 5, "week_num": 21, "period": "16/05- 22/05  18/05-24/05", "total": 431916.0, "woolies": 263631.0, "coles": 148902.0, "ind": 19383.0, "other": 0, "total_boxes": 4541, "woolies_boxes": 2794, "coles_boxes": 1520, "ind_boxes": 227}, {"date": "2025-05-23", "year": 2025, "month": 5, "week_num": 22, "period": "23/05- 29/05  25/05-30/05", "total": 407204.0, "woolies": 234729.0, "coles": 153324.0, "ind": 19151.0, "other": 0, "total_boxes": 4243, "woolies_boxes": 2497, "coles_boxes": 1520, "ind_boxes": 226}, {"date": "2025-05-30", "year": 2025, "month": 5, "week_num": 23, "period": "30/05- 05/06  31/05-07/06", "total": 402780.0, "woolies": 233430.0, "coles": 156762.0, "ind": 12588.0, "other": 0, "total_boxes": 4157, "woolies_boxes": 2498, "coles_boxes": 1520, "ind_boxes": 139}, {"date": "2025-06-06", "year": 2025, "month": 6, "week_num": 24, "period": "06/06- 12/06  08/06-14/06", "total": 373570.0, "woolies": 208551.0, "coles": 152382.0, "ind": 12637.0, "other": 0, "total_boxes": 3840, "woolies_boxes": 2219, "coles_boxes": 1480, "ind_boxes": 141}, {"date": "2025-06-13", "year": 2025, "month": 6, "week_num": 25, "period": "13/06- 19/06  15/06-21/06", "total": 380116.0, "woolies": 223059.0, "coles": 142308.0, "ind": 14749.0, "other": 0, "total_boxes": 3894, "woolies_boxes": 2375, "coles_boxes": 1360, "ind_boxes": 159}, {"date": "2025-06-20", "year": 2025, "month": 6, "week_num": 26, "period": "20/06- 26/06  22/06-27/06", "total": 367977.0, "woolies": 226473.0, "coles": 123912.0, "ind": 17592.0, "other": 0, "total_boxes": 3948, "woolies_boxes": 2469, "coles_boxes": 1280, "ind_boxes": 199}, {"date": "2025-06-27", "year": 2025, "month": 6, "week_num": 27, "period": "27/06- 03/07 28/06-06/07", "total": 364134.0, "woolies": 221007.0, "coles": 129210.0, "ind": 13917.0, "other": 0, "total_boxes": 3785, "woolies_boxes": 2347, "coles_boxes": 1280, "ind_boxes": 158}, {"date": "2025-07-04", "year": 2025, "month": 7, "week_num": 28, "period": "04/07- 10/07  07/07-13/07", "total": 354310.0, "woolies": 210636.0, "coles": 130332.0, "ind": 13342.0, "other": 0, "total_boxes": 3728, "woolies_boxes": 2268, "coles_boxes": 1320, "ind_boxes": 140}, {"date": "2025-07-11", "year": 2025, "month": 7, "week_num": 29, "period": "11/07- 17/07  14/07-20/07", "total": 324605.0, "woolies": 190104.0, "coles": 123342.0, "ind": 11159.0, "other": 0, "total_boxes": 3326, "woolies_boxes": 2004, "coles_boxes": 1200, "ind_boxes": 122}, {"date": "2025-07-18", "year": 2025, "month": 7, "week_num": 30, "period": "18/07- 24/07  21/07-26/07", "total": 330947.0, "woolies": 202920.0, "coles": 114942.0, "ind": 13085.0, "other": 0, "total_boxes": 3397, "woolies_boxes": 2136, "coles_boxes": 1120, "ind_boxes": 141}, {"date": "2025-07-25", "year": 2025, "month": 7, "week_num": 31, "period": "25/07- 31/07  27/07-2/08", "total": 300954.0, "woolies": 184845.0, "coles": 102366.0, "ind": 13743.0, "other": 0, "total_boxes": 3108, "woolies_boxes": 1961, "coles_boxes": 1000, "ind_boxes": 147}, {"date": "2025-08-01", "year": 2025, "month": 8, "week_num": 32, "period": "01/08- 07/08  03/08-9/08", "total": 294591.0, "woolies": 174243.0, "coles": 106566.0, "ind": 13782.0, "other": 0, "total_boxes": 3035, "woolies_boxes": 1847, "coles_boxes": 1040, "ind_boxes": 148}, {"date": "2025-08-08", "year": 2025, "month": 8, "week_num": 33, "period": "08/08- 14/08  10/08-16/08", "total": 312000.0, "woolies": 197058.0, "coles": 101076.0, "ind": 13866.0, "other": 0, "total_boxes": 3271, "woolies_boxes": 2126, "coles_boxes": 1000, "ind_boxes": 145}, {"date": "2025-08-15", "year": 2025, "month": 8, "week_num": 34, "period": "15/08- 21/08  17/08-23/08", "total": 302234.0, "woolies": 187014.0, "coles": 100740.0, "ind": 14480.0, "other": 0, "total_boxes": 3189, "woolies_boxes": 2038, "coles_boxes": 1000, "ind_boxes": 151}, {"date": "2025-08-22", "year": 2025, "month": 8, "week_num": 35, "period": "22/08- 28/08  24/08-30/08", "total": 298465.0, "woolies": 171024.0, "coles": 113364.0, "ind": 14077.0, "other": 0, "total_boxes": 3140, "woolies_boxes": 1872, "coles_boxes": 1120, "ind_boxes": 148}, {"date": "2025-08-29", "year": 2025, "month": 8, "week_num": 36, "period": "29/08- 04/09  31/08-6/09", "total": 384290.0, "woolies": 233694.0, "coles": 136212.0, "ind": 14384.0, "other": 0, "total_boxes": 4073, "woolies_boxes": 2558, "coles_boxes": 1360, "ind_boxes": 155}, {"date": "2025-09-05", "year": 2025, "month": 9, "week_num": 37, "period": "05/09- 11/09  07/09-13/09", "total": 395709.0, "woolies": 236286.0, "coles": 142764.0, "ind": 16659.0, "other": 0, "total_boxes": 4168, "woolies_boxes": 2582, "coles_boxes": 1400, "ind_boxes": 186}, {"date": "2025-09-12", "year": 2025, "month": 9, "week_num": 38, "period": "12/09- 18/09  14/09-20/09", "total": 412571.0, "woolies": 276090.0, "coles": 125100.0, "ind": 11381.0, "other": 0, "total_boxes": 4926, "woolies_boxes": 3515, "coles_boxes": 1280, "ind_boxes": 131}, {"date": "2025-09-19", "year": 2025, "month": 9, "week_num": 39, "period": "19/09- 25/09  21/09-27/09", "total": 262455.0, "woolies": 147279.0, "coles": 82284.0, "ind": 32892.0, "other": 0, "total_boxes": 3002, "woolies_boxes": 1659, "coles_boxes": 840, "ind_boxes": 503}, {"date": "2025-09-26", "year": 2025, "month": 9, "week_num": 40, "period": "26/09- 2/10  28/09-4/10", "total": 389068.0, "woolies": 188334.0, "coles": 164568.0, "ind": 36166.0, "other": 0, "total_boxes": 4349, "woolies_boxes": 2034, "coles_boxes": 1680, "ind_boxes": 635}, {"date": "2025-10-03", "year": 2025, "month": 10, "week_num": 41, "period": "3/10- 9/10 5/10-11/10", "total": 260087.0, "woolies": 136683.0, "coles": 96564.0, "ind": 26840.0, "other": 0, "total_boxes": 2686, "woolies_boxes": 1511, "coles_boxes": 960, "ind_boxes": 215}, {"date": "2025-10-10", "year": 2025, "month": 10, "week_num": 42, "period": "10/10- 16/10 12/10-17/10", "total": 338109.0, "woolies": 203343.0, "coles": 119364.0, "ind": 15402.0, "other": 0, "total_boxes": 3622, "woolies_boxes": 2251, "coles_boxes": 1200, "ind_boxes": 171}, {"date": "2025-10-17", "year": 2025, "month": 10, "week_num": 43, "period": "17/10- 23/10 18/10-25/10", "total": 387839.0, "woolies": 197391.0, "coles": 174450.0, "ind": 15998.0, "other": 0, "total_boxes": 4158, "woolies_boxes": 2241, "coles_boxes": 1720, "ind_boxes": 197}, {"date": "2025-10-24", "year": 2025, "month": 10, "week_num": 44, "period": "24/10- 30/10 26/10-31/10", "total": 370299.0, "woolies": 202113.0, "coles": 156120.0, "ind": 12066.0, "other": 0, "total_boxes": 3948, "woolies_boxes": 2201, "coles_boxes": 1600, "ind_boxes": 147}, {"date": "2025-10-31", "year": 2025, "month": 10, "week_num": 45, "period": "31/10- 6/11 1/11-7/11", "total": 353292.0, "woolies": 180363.0, "coles": 152328.0, "ind": 20601.0, "other": 0, "total_boxes": 3821, "woolies_boxes": 1999, "coles_boxes": 1480, "ind_boxes": 342}, {"date": "2025-11-07", "year": 2025, "month": 11, "week_num": 46, "period": "07/11- 13/11 08/11-14/11", "total": 374339.0, "woolies": 220725.0, "coles": 145092.0, "ind": 8522.0, "other": 0, "total_boxes": 3900, "woolies_boxes": 2401, "coles_boxes": 1400, "ind_boxes": 99}, {"date": "2025-11-14", "year": 2025, "month": 11, "week_num": 47, "period": "14/11- 20/11 15/11-21/11", "total": 356459.0, "woolies": 189363.0, "coles": 155610.0, "ind": 11486.0, "other": 0, "total_boxes": 3781, "woolies_boxes": 2071, "coles_boxes": 1560, "ind_boxes": 150}, {"date": "2025-11-21", "year": 2025, "month": 11, "week_num": 48, "period": "21/11- 27/11 22/11-28/11", "total": 391030.0, "woolies": 206760.0, "coles": 171714.0, "ind": 12556.0, "other": 0, "total_boxes": 4119, "woolies_boxes": 2256, "coles_boxes": 1720, "ind_boxes": 143}, {"date": "2025-11-28", "year": 2025, "month": 11, "week_num": 49, "period": "28/11- 04/12 29/11-5/12", "total": 320029.0, "woolies": 209157.0, "coles": 99792.0, "ind": 11080.0, "other": 0, "total_boxes": 3339, "woolies_boxes": 2246, "coles_boxes": 960, "ind_boxes": 133}, {"date": "2025-12-05", "year": 2025, "month": 12, "week_num": 50, "period": "05/12- 11/12 06/12-12/12", "total": 385688.0, "woolies": 190726.0, "coles": 184998.0, "ind": 9964.0, "other": 0, "total_boxes": 3994, "woolies_boxes": 2074, "coles_boxes": 1800, "ind_boxes": 120}, {"date": "2025-12-12", "year": 2025, "month": 12, "week_num": 51, "period": "12/12- 18/12 13/12-19/12", "total": 420674.0, "woolies": 266216.0, "coles": 149382.0, "ind": 5076.0, "other": 0, "total_boxes": 4532, "woolies_boxes": 2936, "coles_boxes": 1480, "ind_boxes": 116}, {"date": "2025-12-19", "year": 2025, "month": 12, "week_num": 52, "period": "19/12- 25/12 20/12-26/12", "total": 158762.0, "woolies": 100985.0, "coles": 51528.0, "ind": 6249.0, "other": 0, "total_boxes": 1695, "woolies_boxes": 1110, "coles_boxes": 520, "ind_boxes": 65}, {"date": "2026-12-26", "year": 2026, "month": 12, "week_num": 1, "period": "26/12- 01/1 27/12-2/01", "total": 124767.0, "woolies": 117064.0, "coles": 0.0, "ind": 7703.0, "other": 0, "total_boxes": 1339, "woolies_boxes": 1244, "coles_boxes": 0, "ind_boxes": 95}, {"date": "2026-01-02", "year": 2026, "month": 1, "week_num": 2, "period": "02/1- 08/1 03/01-9/01", "total": 250304.0, "woolies": 61104.0, "coles": 153222.0, "ind": 35978.0, "other": 0, "total_boxes": 3103, "woolies_boxes": 1481, "coles_boxes": 1520, "ind_boxes": 102}, {"date": "2026-01-09", "year": 2026, "month": 1, "week_num": 3, "period": "09/1- 15/1 10/01-16/01", "total": 451779.0, "woolies": 225460.0, "coles": 206268.0, "ind": 20051.0, "other": 0, "total_boxes": 4550, "woolies_boxes": 2429, "coles_boxes": 2040, "ind_boxes": 81}, {"date": "2026-01-16", "year": 2026, "month": 1, "week_num": 4, "period": "16/1- 22/1 17/01-23/01", "total": 383593.0, "woolies": 251492.0, "coles": 121356.0, "ind": 10745.0, "other": 0, "total_boxes": 4043, "woolies_boxes": 2756, "coles_boxes": 1200, "ind_boxes": 87}, {"date": "2026-01-23", "year": 2026, "month": 1, "week_num": 5, "period": "23/1- 29/1 24/01-30/01", "total": 403192.0, "woolies": 213708.0, "coles": 172032.0, "ind": 17452.0, "other": 0, "total_boxes": 4197, "woolies_boxes": 2304, "coles_boxes": 1680, "ind_boxes": 213}, {"date": "2026-01-30", "year": 2026, "month": 1, "week_num": 6, "period": "30/1- 05/2 31/01-06/02", "total": 305934.0, "woolies": 143019.0, "coles": 153582.0, "ind": 9333.0, "other": 0, "total_boxes": 3129, "woolies_boxes": 1526, "coles_boxes": 1520, "ind_boxes": 83}, {"date": "2026-02-06", "year": 2026, "month": 2, "week_num": 7, "period": "6/2- 12/2 07/02-13/02", "total": 368797.0, "woolies": 191098.0, "coles": 163452.0, "ind": 14247.0, "other": 0, "total_boxes": 3850, "woolies_boxes": 2079, "coles_boxes": 1600, "ind_boxes": 171}, {"date": "2026-02-13", "year": 2026, "month": 2, "week_num": 8, "period": "13/2- 19/2 14/02-20/02", "total": 310463.0, "woolies": 182416.0, "coles": 113164.0, "ind": 14883.0, "other": 0, "total_boxes": 3289, "woolies_boxes": 2033, "coles_boxes": 1120, "ind_boxes": 136}, {"date": "2026-02-20", "year": 2026, "month": 2, "week_num": 9, "period": "20/2- 26/2 21/02-27/02", "total": 333190.0, "woolies": 163860.0, "coles": 161826.0, "ind": 7504.0, "other": 0, "total_boxes": 3473, "woolies_boxes": 1784, "coles_boxes": 1600, "ind_boxes": 89}, {"date": "2026-02-27", "year": 2026, "month": 2, "week_num": 10, "period": "27/2- 5/3 28/02-6/3", "total": 364090.0, "woolies": 171534.0, "coles": 177156.0, "ind": 15400.0, "other": 0, "total_boxes": 3811, "woolies_boxes": 1860, "coles_boxes": 1760, "ind_boxes": 191}, {"date": "2026-03-06", "year": 2026, "month": 3, "week_num": 11, "period": "6/3 - 12/3      7/3 - 13/3", "total": 306221.0, "woolies": 162514.0, "coles": 133122.0, "ind": 10585.0, "other": 0, "total_boxes": 3207, "woolies_boxes": 1761, "coles_boxes": 1320, "ind_boxes": 126}, {"date": "2026-03-13", "year": 2026, "month": 3, "week_num": 12, "period": "13/3 - 19/3    14/3 - 20/3", "total": 333171.0, "woolies": 170035.0, "coles": 153582.0, "ind": 9554.0, "other": 0, "total_boxes": 3479, "woolies_boxes": 1843, "coles_boxes": 1520, "ind_boxes": 116}, {"date": "2026-03-20", "year": 2026, "month": 3, "week_num": 13, "period": "20/3 - 26/3    21/3 - 27/3", "total": 397980.0, "woolies": 208567.0, "coles": 178266.0, "ind": 11147.0, "other": 0, "total_boxes": 4171, "woolies_boxes": 2275, "coles_boxes": 1760, "ind_boxes": 136}, {"date": "2026-03-27", "year": 2026, "month": 3, "week_num": 14, "period": "27/3 - 02/4    28/3 - 3/4", "total": 324907.0, "woolies": 183610.0, "coles": 134208.0, "ind": 7089.0, "other": 0, "total_boxes": 3397, "woolies_boxes": 1993, "coles_boxes": 1320, "ind_boxes": 84}, {"date": "2026-04-03", "year": 2026, "month": 4, "week_num": 15, "period": "3/4 - 9/4      04/4 - 10/4", "total": 280487.0, "woolies": 130801.0, "coles": 138228.0, "ind": 11458.0, "other": 0, "total_boxes": 2918, "woolies_boxes": 1423, "coles_boxes": 1360, "ind_boxes": 135}, {"date": "2026-04-10", "year": 2026, "month": 4, "week_num": 16, "period": "10/4 - 16/4      11/4 - 17/4", "total": 321182.0, "woolies": 161319.0, "coles": 145182.0, "ind": 14681.0, "other": 0, "total_boxes": 3367, "woolies_boxes": 1742, "coles_boxes": 1440, "ind_boxes": 185}, {"date": "2026-04-17", "year": 2026, "month": 4, "week_num": 17, "period": "17/4 - 23/4      18/4 - 24/4", "total": 352647.0, "woolies": 205048.0, "coles": 132918.0, "ind": 10033.0, "other": 4648.0, "total_boxes": 3734, "woolies_boxes": 2229, "coles_boxes": 1320, "ind_boxes": 126}, {"date": "2026-04-24", "year": 2026, "month": 4, "week_num": 18, "period": "24/4 - 30/4      25/4 - 1/5", "total": 261703.0, "woolies": 122695.0, "coles": 128358.0, "ind": 10650.0, "other": 0, "total_boxes": 2734, "woolies_boxes": 1318, "coles_boxes": 1280, "ind_boxes": 136}, {"date": "2026-05-01", "year": 2026, "month": 5, "week_num": 19, "period": "01/5 - 7/5      02/5 - 8/5", "total": 356487.0, "woolies": 210316.0, "coles": 134208.0, "ind": 11963.0, "other": 0, "total_boxes": 3777, "woolies_boxes": 2309, "coles_boxes": 1320, "ind_boxes": 148}, {"date": "2026-05-08", "year": 2026, "month": 5, "week_num": 20, "period": "8/5 - 14/5      9/5 - 15/5", "total": 339411.0, "woolies": 170908.0, "coles": 156516.0, "ind": 11987.0, "other": 0, "total_boxes": 3571, "woolies_boxes": 1861, "coles_boxes": 1560, "ind_boxes": 150}, {"date": "2026-05-15", "year": 2026, "month": 5, "week_num": 21, "period": "15/5 - 21/5      16/5 - 22/5", "total": 334838.0, "woolies": 153840.0, "coles": 160716.0, "ind": 20282.0, "other": 0, "total_boxes": 3689, "woolies_boxes": 1688, "coles_boxes": 1600, "ind_boxes": 401}, {"date": "2026-05-22", "year": 2026, "month": 5, "week_num": 22, "period": "22/5 - 28/5      23/5 - 29/5", "total": 316690.0, "woolies": 163508.0, "coles": 130164.0, "ind": 23018.0, "other": 0, "total_boxes": 3494, "woolies_boxes": 1762, "coles_boxes": 1280, "ind_boxes": 452}, {"date": "2026-05-29", "year": 2026, "month": 5, "week_num": 23, "period": "29/5 - 4/6      30/5 - 5/6", "total": 355327.0, "woolies": 185725.0, "coles": 153762.0, "ind": 15840.0, "other": 0, "total_boxes": 4055, "woolies_boxes": 2007, "coles_boxes": 1520, "ind_boxes": 528}];
+
+// ── State ──────────────────────────────────────────────────────────
+let gran = 'weekly';
+let activeChannels = new Set(['woolies','coles','ind','other']);
+let compareMode = 'none';
+let periodOffset = 0; // 0 = latest, -1 = one back, etc (only for weekly/monthly)
+
+// ── Chart instances ────────────────────────────────────────────────
+let mainChart, donutChart, compareChart;
+
+const COLORS = {
+  woolies: '#00a651',
+  coles:   '#e8192c',
+  ind:     '#f5a623',
+  other:   '#6c7adb',
+  total:   '#4fc3f7',
+};
+const LABELS = { woolies:'Woolworths', coles:'Coles', ind:'Independents', other:'Other' };
+
+// ── Data aggregation ───────────────────────────────────────────────
+function aggregateData(records, granularity) {
+  const map = new Map();
+  records.forEach(r => {
+    const d = new Date(r.date);
+    let key, label;
+    if (granularity === 'weekly') {
+      key = r.date;
+      label = r.period.split(/\s{2,}/)[0].trim();
+    } else if (granularity === 'monthly') {
+      key = `${r.year}-${String(r.month).padStart(2,'0')}`;
+      label = new Date(r.year, r.month-1, 1).toLocaleString('default', {month:'short', year:'numeric'});
+    } else {
+      key = String(r.year);
+      label = String(r.year);
+    }
+    if (!map.has(key)) map.set(key, { key, label, total:0, woolies:0, coles:0, ind:0, other:0, boxes:0 });
+    const e = map.get(key);
+    e.total   += r.total;
+    e.woolies += r.woolies;
+    e.coles   += r.coles;
+    e.ind     += r.ind;
+    e.other   += r.other;
+    e.boxes   += r.total_boxes;
+  });
+  return Array.from(map.values());
+}
+
+function getAggregated() {
+  return aggregateData(RAW, gran);
+}
+
+// ── Period offset slicing (weekly/monthly) ─────────────────────────
+function getVisibleData(all) {
+  if (gran === 'yearly') return all;
+  const PAGE = gran === 'weekly' ? 26 : 18;
+  const total = all.length;
+  // periodOffset: 0=latest page, clamp
+  const maxOffset = Math.ceil(total / PAGE) - 1;
+  const offset = Math.max(0, Math.min(maxOffset, maxOffset - periodOffset));
+  const start = offset * PAGE;
+  return all.slice(start, start + PAGE);
+}
+
+function getPeriodLabel(visible) {
+  if (!visible.length) return '';
+  if (gran === 'yearly') return 'All Years';
+  return `${visible[0].label} – ${visible[visible.length-1].label}`;
+}
+
+// ── Formatting ─────────────────────────────────────────────────────
+function fmtMoney(v) {
+  if (v >= 1e6) return `$${(v/1e6).toFixed(2)}M`;
+  if (v >= 1e3) return `$${(v/1e3).toFixed(1)}K`;
+  return `$${Math.round(v).toLocaleString()}`;
+}
+function fmtPct(v) { return `${(v*100).toFixed(1)}%`; }
+function fmtChange(curr, prev) {
+  if (!prev || prev === 0) return null;
+  return (curr - prev) / prev;
+}
+
+// ── KPI cards ──────────────────────────────────────────────────────
+function updateKPIs(visible, prev) {
+  const sum = (arr, key) => arr.reduce((a,b) => a + b[key], 0);
+  const total   = sum(visible, 'total');
+  const woolies = sum(visible, 'woolies');
+  const coles   = sum(visible, 'coles');
+  const ind     = sum(visible, 'ind');
+  const other   = sum(visible, 'other');
+
+  const pTotal   = prev ? sum(prev, 'total')   : null;
+  const pWoolies = prev ? sum(prev, 'woolies')  : null;
+  const pColes   = prev ? sum(prev, 'coles')    : null;
+  const pInd     = prev ? sum(prev, 'ind')      : null;
+  const pOther   = prev ? sum(prev, 'other')    : null;
+
+  function setKPI(id, val, prevVal, pctOfTotal) {
+    document.getElementById(`kpi-${id}`).textContent = fmtMoney(val);
+    const chgEl = document.getElementById(`kpi-${id}-chg`);
+    const pctEl = document.getElementById(`kpi-${id}-pct`);
+    const vsEl  = document.getElementById(`kpi-${id}-vs`);
+    const chg = fmtChange(val, prevVal);
+    if (chg !== null) {
+      const up = chg >= 0;
+      chgEl.className = `change ${up ? 'up' : 'down'}`;
+      chgEl.textContent = `${up?'▲':'▼'} ${fmtPct(Math.abs(chg))} vs prev`;
+    } else {
+      chgEl.className = 'change neutral';
+      chgEl.textContent = '';
+    }
+    if (pctEl) pctEl.textContent = total > 0 ? `${fmtPct(pctOfTotal / total)} of revenue` : '';
+    if (vsEl)  vsEl.textContent  = prevVal ? `vs ${fmtMoney(prevVal)}` : '';
+  }
+
+  document.getElementById('kpi-total').textContent = fmtMoney(total);
+  const totalChg = fmtChange(total, pTotal);
+  const el = document.getElementById('kpi-total-chg');
+  if (totalChg !== null) {
+    el.className = `change ${totalChg >= 0 ? 'up' : 'down'}`;
+    el.textContent = `${totalChg >= 0 ? '▲' : '▼'} ${fmtPct(Math.abs(totalChg))} vs prev`;
+  } else {
+    el.className = 'change neutral'; el.textContent = '';
+  }
+  const vsEl = document.getElementById('kpi-total-vs');
+  if (vsEl) vsEl.textContent = pTotal ? `vs ${fmtMoney(pTotal)}` : '';
+
+  setKPI('ww',    woolies, pWoolies, woolies);
+  setKPI('coles', coles,   pColes,   coles);
+  setKPI('ind',   ind,     pInd,     ind);
+  setKPI('other', other,   pOther,   other);
+}
+
+// ── Main bar/line chart ────────────────────────────────────────────
+function buildMainChart(visible, prev) {
+  const labels = visible.map(d => d.label);
+  const channels = ['woolies','coles','ind','other'].filter(c => activeChannels.has(c));
+
+  const datasets = channels.map(c => ({
+    label: LABELS[c],
+    data: visible.map(d => d[c]),
+    backgroundColor: COLORS[c],
+    borderColor: COLORS[c],
+    borderRadius: 3,
+    borderSkipped: false,
+  }));
+
+  if (prev && channels.length > 0) {
+    // overlay dashed total line for prev
+    datasets.push({
+      label: 'Prev Period Total',
+      data: prev.map(d => d.total),
+      type: 'line',
+      borderColor: 'rgba(255,255,255,0.3)',
+      borderDash: [4,3],
+      borderWidth: 1.5,
+      pointRadius: 0,
+      fill: false,
+      tension: 0.3,
+      yAxisID: 'y',
+    });
+  }
+
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  if (mainChart) mainChart.destroy();
+  mainChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, labels: { color: '#8b8fa8', font: { size: 11 }, boxWidth: 10, padding: 12 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw)}`,
+            footer: items => {
+              const total = items.reduce((s,i) => s + (typeof i.raw === 'number' ? i.raw : 0), 0);
+              return items.length > 1 ? `Total: ${fmtMoney(total)}` : '';
+            }
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color: '#8b8fa8', maxRotation: 45, font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { stacked: true, ticks: { color: '#8b8fa8', callback: v => fmtMoney(v), font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
+      }
+    }
+  });
+}
+
+// ── Donut chart ────────────────────────────────────────────────────
+function buildDonutChart(visible) {
+  const sum = key => visible.reduce((a,b) => a + b[key], 0);
+  const channels = ['woolies','coles','ind','other'].filter(c => activeChannels.has(c));
+  const vals = channels.map(c => sum(c));
+  const total = vals.reduce((a,b) => a+b, 0);
+
+  const ctx = document.getElementById('donutChart').getContext('2d');
+  if (donutChart) donutChart.destroy();
+  donutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: channels.map(c => LABELS[c]),
+      datasets: [{ data: vals, backgroundColor: channels.map(c => COLORS[c]), borderWidth: 2, borderColor: '#1a1d27', hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#8b8fa8', font: { size: 11 }, padding: 10, boxWidth: 10 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${fmtMoney(ctx.raw)} (${fmtPct(ctx.raw/total)})` } }
+      }
+    }
+  });
+}
+
+// ── Comparison chart ───────────────────────────────────────────────
+function buildCompareChart(current, prev) {
+  if (!prev || compareMode === 'none') {
+    document.getElementById('compareChartWrap').classList.remove('visible');
+    if (compareChart) { compareChart.destroy(); compareChart = null; }
+    return;
+  }
+  document.getElementById('compareChartWrap').classList.add('visible');
+
+  const len = Math.min(current.length, prev.length);
+  const labels = current.slice(0, len).map(d => d.label);
+
+  const currTotals = current.slice(0, len).map(d => d.total);
+  const prevTotals = prev.slice(0, len).map(d => d.total);
+
+  const ctx = document.getElementById('compareChart').getContext('2d');
+  if (compareChart) compareChart.destroy();
+  compareChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Current', data: currTotals, backgroundColor: 'rgba(79,195,247,0.7)', borderRadius: 3 },
+        { label: compareMode === 'prevyear' ? 'Prior Year' : 'Prior Period', data: prevTotals, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 3 },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#8b8fa8', font: { size: 11 }, boxWidth: 10 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw)}`,
+            afterBody: items => {
+              if (items.length >= 1) {
+                const curr = items.find(i => i.datasetIndex === 0)?.raw || 0;
+                const prev = items.find(i => i.datasetIndex === 1)?.raw || 0;
+                if (prev > 0) return [`Δ ${fmtPct((curr-prev)/prev)}`];
+              }
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#8b8fa8', font: { size: 10 }, maxRotation: 45 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: { color: '#8b8fa8', callback: v => fmtMoney(v), font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
+      }
+    }
+  });
+}
+
+// ── Table ──────────────────────────────────────────────────────────
+function buildTable(visible, prev) {
+  const channels = ['woolies','coles','ind','other'].filter(c => activeChannels.has(c));
+  const head = document.getElementById('tableHead');
+  const body = document.getElementById('tableBody');
+
+  head.innerHTML = `<tr>
+    <th>Period</th>
+    <th>Total Revenue</th>
+    ${channels.map(c => `<th>${LABELS[c]}</th>`).join('')}
+    ${channels.map(c => `<th>${LABELS[c]} %</th>`).join('')}
+    ${prev ? '<th>vs Prev</th>' : ''}
+    <th>Boxes</th>
+  </tr>`;
+
+  body.innerHTML = visible.map((d, i) => {
+    const pRow = prev ? prev[i] : null;
+    const chg = pRow ? fmtChange(d.total, pRow.total) : null;
+    const pctBar = key => {
+      const pct = d.total > 0 ? (d[key] / d.total * 100) : 0;
+      return `<div class="bar-cell"><div class="mini-bar" style="width:${Math.max(2,pct)}px;background:${COLORS[key]}"></div>${fmtPct(pct/100)}</div>`;
+    };
+    return `<tr>
+      <td>${d.label}</td>
+      <td>${fmtMoney(d.total)}</td>
+      ${channels.map(c => `<td>${fmtMoney(d[c])}</td>`).join('')}
+      ${channels.map(c => `<td>${pctBar(c)}</td>`).join('')}
+      ${pRow ? `<td><span class="badge ${chg >= 0 ? 'up' : 'down'}">${chg >= 0 ? '+' : ''}${fmtPct(Math.abs(chg))}</span></td>` : ''}
+      <td>${(d.boxes||0).toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Previous period data ───────────────────────────────────────────
+function getPrevData(all, visible) {
+  if (compareMode === 'none') return null;
+
+  if (compareMode === 'prevyear' && gran === 'yearly') {
+    // Already yearly — shift each year back by 1
+    return null; // not meaningful
+  }
+
+  if (compareMode === 'prevyear') {
+    // Get same periods but 1 year earlier
+    const visibleKeys = new Set(visible.map(d => d.key));
+    const prevYear = aggregateData(
+      RAW.map(r => ({ ...r, year: r.year + 1, date: r.date.replace(/^\d{4}/, String(r.year + 1)) })),
+      gran
+    );
+    return prevYear.filter(d => visibleKeys.has(d.key));
+  }
+
+  if (compareMode === 'prev') {
+    const idx = all.findIndex(d => d.key === visible[0].key);
+    if (idx < visible.length) return null;
+    return all.slice(idx - visible.length, idx);
+  }
+  return null;
+}
+
+// ── Main render ────────────────────────────────────────────────────
+function render() {
+  const all = getAggregated();
+  const visible = getVisibleData(all);
+  const prev = getPrevData(all, visible);
+
+  document.getElementById('periodLabel').textContent = getPeriodLabel(visible);
+  document.getElementById('mainChartTitle').textContent = `Revenue by Channel (${gran.charAt(0).toUpperCase()+gran.slice(1)})`;
+  document.getElementById('tableTitle').textContent = gran.charAt(0).toUpperCase()+gran.slice(1)+' Detail';
+  document.getElementById('compareChartTitle').textContent =
+    compareMode === 'prevyear' ? 'Current vs Prior Year' : 'Current vs Prior Period';
+
+  updateKPIs(visible, prev);
+  buildMainChart(visible, prev);
+  buildDonutChart(visible);
+  buildCompareChart(visible, prev);
+  buildTable(visible, prev);
+
+  // Prev/next nav
+  const PAGE = gran === 'weekly' ? 26 : 18;
+  const maxOffset = gran === 'yearly' ? 0 : Math.ceil(all.length / PAGE) - 1;
+  document.getElementById('prevBtn').disabled = periodOffset >= maxOffset;
+  document.getElementById('nextBtn').disabled = periodOffset <= 0;
+}
+
+// ── Event listeners ────────────────────────────────────────────────
+document.querySelectorAll('#granGroup button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#granGroup button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    gran = btn.dataset.gran;
+    periodOffset = 0;
+    render();
+  });
+});
+
+document.querySelectorAll('.channel-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const ch = btn.dataset.ch;
+    if (ch === 'all') {
+      const allActive = activeChannels.size === 4;
+      if (allActive) {
+        activeChannels.clear();
+      } else {
+        activeChannels = new Set(['woolies','coles','ind','other']);
+      }
+    } else {
+      if (activeChannels.has(ch)) activeChannels.delete(ch);
+      else activeChannels.add(ch);
+    }
+    document.querySelectorAll('.channel-btn').forEach(b => {
+      if (b.dataset.ch === 'all') {
+        b.classList.toggle('active', activeChannels.size === 4);
+      } else {
+        b.classList.toggle('active', activeChannels.has(b.dataset.ch));
+      }
+    });
+    render();
+  });
+});
+
+document.getElementById('compareSelect').addEventListener('change', e => {
+  compareMode = e.target.value;
+  render();
+});
+
+document.getElementById('prevBtn').addEventListener('click', () => { periodOffset++; render(); });
+document.getElementById('nextBtn').addEventListener('click', () => { if (periodOffset > 0) { periodOffset--; render(); } });
+
+// Initial render
+render();
+</script>
+</body>
+</html>
